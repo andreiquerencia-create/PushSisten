@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/db';
 import { formatSaleNumber } from '@/lib/sale-number';
+import puppeteer from 'puppeteer';
 
 const DEFAULT_AGRADECIMENTO = `Obrigado pela sua compra, {cliente} ❤️\n\nSeu pedido #{pedido} foi finalizado com sucesso.\n\nVendedor responsável: {vendedor}\nTotal: {total}\n\n{empresa}`;
 
@@ -262,61 +263,34 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
     const html = buildReceiptHTML(sale, company, messageContent);
 
-    // Generate PDF via HTML2PDF API
-    const createRes = await fetch('https://apps.abacus.ai/api/createConvertHtmlToPdfRequest', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        deployment_token: process.env.ABACUSAI_API_KEY,
-        html_content: html,
-        pdf_options: {
-          format: 'A4',
-          margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
-          print_background: true,
-        },
-        base_url: process.env.NEXTAUTH_URL || '',
-      }),
-    });
+    // Generate PDF locally using Puppeteer
+    let browser;
+    try {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
 
-    if (!createRes.ok) {
-      const err = await createRes.json().catch(() => ({ error: 'Failed to create PDF' }));
-      console.error('PDF create error:', err);
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
+        printBackground: true,
+      });
+      await browser.close();
+
+      return new NextResponse(pdfBuffer, {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${sale.status === 'orcamento' ? 'orcamento' : 'comprovante'}-${formatSaleNumber(sale.companySaleNumber, sale.saleNumber)}.pdf"`,
+        },
+      });
+    } catch (pdfError: any) {
+      console.error('PDF generation error:', pdfError);
+      if (browser) await browser.close();
       return NextResponse.json({ error: 'Erro ao gerar PDF' }, { status: 500 });
     }
-
-    const { request_id } = await createRes.json();
-    if (!request_id) return NextResponse.json({ error: 'No request ID' }, { status: 500 });
-
-    // Poll for completion
-    let attempts = 0;
-    const maxAttempts = 120;
-    while (attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const statusRes = await fetch('https://apps.abacus.ai/api/getConvertHtmlToPdfStatus', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ request_id, deployment_token: process.env.ABACUSAI_API_KEY }),
-      });
-      const statusResult = await statusRes.json();
-      const pdfStatus = statusResult?.status || 'FAILED';
-      const result = statusResult?.result || null;
-
-      if (pdfStatus === 'SUCCESS' && result?.result) {
-        const pdfBuffer = Buffer.from(result.result, 'base64');
-        return new NextResponse(pdfBuffer, {
-          headers: {
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="${sale.status === 'orcamento' ? 'orcamento' : 'comprovante'}-${formatSaleNumber(sale.companySaleNumber, sale.saleNumber)}.pdf"`,
-          },
-        });
-      } else if (pdfStatus === 'FAILED') {
-        console.error('PDF generation failed:', result?.error);
-        return NextResponse.json({ error: 'Falha ao gerar PDF' }, { status: 500 });
-      }
-      attempts++;
-    }
-
-    return NextResponse.json({ error: 'Timeout na geração do PDF' }, { status: 500 });
   } catch (error: any) {
     console.error('GET /api/vendas/[id]/comprovante error:', error);
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });

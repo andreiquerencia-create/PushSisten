@@ -7,8 +7,9 @@ import { prisma } from '@/lib/db';
 import { INSIGHT_THRESHOLDS } from '@/lib/insights-engine';
 import { consumeAiCredit } from '@/lib/ai-usage';
 
-const LLM_BASE = process.env.LLM_API_BASE_URL || 'https://api.abacus.ai';
-const LLM_KEY = process.env.ABACUSAI_API_KEY || '';
+const LLM_BASE = process.env.LLM_API_BASE_URL || 'https://api.openai.com';
+const LLM_KEY = process.env.LLM_API_KEY || '';
+const LLM_MODEL = process.env.LLM_MODEL || 'gpt-4o-mini';
 
 export async function POST(request: NextRequest) {
   try {
@@ -173,7 +174,7 @@ ${productSummaries.slice(0, 50).join('\n')}
     const llmRes = await fetch(`${LLM_BASE}/api/v0/chat/completions`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${LLM_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-3-5-sonnet-v2', messages, temperature: 0.4, max_tokens: 2000 }),
+      body: JSON.stringify({ model: LLM_MODEL, messages, temperature: 0.4, max_tokens: 2000 }),
     });
 
     if (!llmRes.ok) {

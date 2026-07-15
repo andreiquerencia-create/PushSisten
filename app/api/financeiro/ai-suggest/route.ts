@@ -75,14 +75,18 @@ Responda APENAS com JSON válido no formato:
 
 Responda com JSON puro, sem markdown.`;
 
-    const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
+    const llmBaseUrl = process.env.LLM_API_BASE_URL || 'https://api.openai.com';
+    const llmKey = process.env.LLM_API_KEY || '';
+    const llmModel = process.env.LLM_MODEL || 'gpt-4o-mini';
+
+    const response = await fetch(`${llmBaseUrl}/v1/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.ABACUSAI_API_KEY}`,
+        'Authorization': `Bearer ${llmKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5.4-mini',
+        model: llmModel,
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 500,
         temperature: 0.2,

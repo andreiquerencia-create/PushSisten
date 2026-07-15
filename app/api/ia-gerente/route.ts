@@ -7,7 +7,9 @@ import { prisma } from '@/lib/db';
 import { calculateDRE, calculateSalesMetrics, calculateStockMetrics, getCashBalance, getCashFlowProjection, getReceivables } from '@/lib/financial-engine';
 import { consumeAiCredit } from '@/lib/ai-usage';
 
-const LLM_URL = 'https://apps.abacus.ai/v1/chat/completions';
+const LLM_BASE_URL = process.env.LLM_API_BASE_URL || 'https://api.openai.com';
+const LLM_API_KEY = process.env.LLM_API_KEY || '';
+const LLM_MODEL = process.env.LLM_MODEL || 'gpt-4o-mini';
 
 // Define available tools for the AI
 const AI_TOOLS = [
@@ -825,10 +827,10 @@ Regras:
     const MAX_TOOL_ITERATIONS = 5;
 
     for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
-      const toolResponse = await fetch(LLM_URL, {
+      const toolResponse = await fetch(`${LLM_BASE_URL}/v1/chat/completions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.ABACUSAI_API_KEY}` },
-        body: JSON.stringify({ model: 'gpt-5.4-mini', messages: workMessages, tools: AI_TOOLS, tool_choice: 'auto', max_tokens: 2000 }),
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${LLM_API_KEY}` },
+        body: JSON.stringify({ model: LLM_MODEL, messages: workMessages, tools: AI_TOOLS, tool_choice: 'auto', max_tokens: 2000 }),
       });
 
       if (!toolResponse.ok) {
@@ -859,10 +861,10 @@ Regras:
     }
 
     // Resposta final transmitida SEM tools — todos os dados já estão em workMessages.
-    const streamResponse = await fetch(LLM_URL, {
+    const streamResponse = await fetch(`${LLM_BASE_URL}/v1/chat/completions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.ABACUSAI_API_KEY}` },
-      body: JSON.stringify({ model: 'gpt-5.4-mini', messages: workMessages, stream: true, max_tokens: 3000 }),
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${LLM_API_KEY}` },
+      body: JSON.stringify({ model: LLM_MODEL, messages: workMessages, stream: true, max_tokens: 3000 }),
     });
 
     if (!streamResponse.ok) {
