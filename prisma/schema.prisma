@@ -1,0 +1,1442 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/push_sisten/nextjs_space/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  isProtected Boolean  @default(false)   // proteção contra exclusão em massa (empresas de produção/críticas)
+  name        String
+  cnpj        String?  @unique
+  email       String?
+  phone       String?
+  whatsapp    String?
+  instagram   String?
+  logoUrl     String?
+  address     String?
+  city        String?
+  state       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // SaaS fields
+  plan                String   @default("trial")
+  subscriptionStatus  String   @default("active")
+  trialEndsAt         DateTime?
+  trialDays           Int      @default(14)
+  maxUsers            Int      @default(3)
+  aiQuotaMonthly      Int      @default(50)
+  aiCallsThisMonth    Int      @default(0)
+  aiCallsResetAt      DateTime?
+  lastAccessAt        DateTime?
+
+  // Billing (P8.4) — Company guarda APENAS o estado de acesso vigente.
+  // Tudo do gateway vive em BillingCustomer/BillingSubscription (desacoplado).
+  // billingStatus: NONE | ACTIVE | PAST_DUE | SUSPENDED | CANCELED
+  billingStatus       String    @default("NONE")
+  // Fim do período de tolerância de inadimplência (PAST_DUE). Durante a tolerância a empresa continua usando.
+  gracePeriodEndsAt   DateTime?
+
+  // Price table minimum quantity validation behavior: block | warn | allow (padrão: allow — apenas referência)
+  priceTableMinQtyBehavior String @default("allow")
+
+  // WhatsApp default app: ask | whatsapp | business (padrão: ask — perguntar sempre)
+  whatsappDefaultApp String @default("ask")
+
+  // Numeração sequencial de vendas por empresa (último número emitido). Incrementado atomicamente na criação de venda/orçamento.
+  lastSaleNumber     Int    @default(0)
+
+  users              User[]
+  categories         Category[]
+  products           Product[]
+  customers          Customer[]
+  sales              Sale[]
+  inventoryMovements InventoryMovement[]
+  financialRecords   FinancialRecord[]
+  financialCategories FinancialCategory[]
+  suppliers          Supplier[]
+  carriers           Carrier[]
+  sellers            Seller[]
+  accountsPayable    AccountPayable[]
+  accountsReceivable AccountReceivable[]
+  iaMemories         IAMemory[]
+  iaConversations    IAConversation[]
+  iaContexts         IAOperationalContext[]
+  iaAlerts           IAAlert[]
+  automations        Automation[]
+  automationActions  AutomationAction[]
+  whatsappConfig     WhatsAppConfig?
+  cashAccounts       CashAccount[]
+  cashMovements      CashMovement[]
+  cashSessions       CashSession[]
+  importLogs         ImportLog[]
+  paymentMethods     PaymentMethod[]
+  salePayments       SalePayment[]
+  messageTemplates   MessageTemplate[]
+  accountPlans       AccountPlan[]
+  aiClassificationLogs AiClassificationLog[]
+  activityLogs       ActivityLog[]
+  priceTables        PriceTable[]
+  stockEntries       StockEntry[]
+  ledgerEntries      LedgerEntry[]
+  customerCredits    CustomerCredit[]
+  installments       Installment[]
+  installmentPayments InstallmentPayment[]
+  pushScoreSnapshots PushScoreSnapshot[]
+  pushScoreConfigs   PushScoreConfig[]
+  insights           Insight[]
+  billingCustomer    BillingCustomer?
+  billingAuditLogs   BillingAuditLog[]
+
+  @@map("companies")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  role          String    @default("vendedor")
+  phone         String?
+  isActive      Boolean   @default(true)
+  isMaster      Boolean   @default(false)
+  companyId     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  company       Company?  @relation(fields: [companyId], references: [id])
+  sales         Sale[]
+  seller        Seller?
+
+  @@index([companyId])
+  @@map("users")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  companyId   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company  @relation(fields: [companyId], references: [id])
+  products    Product[]
+
+  @@index([companyId])
+  @@map("categories")
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  name            String
+  sku             String?
+  barcode         String?
+  description     String?
+  costPrice       Float    @default(0)
+  salePrice       Float    @default(0)
+  margin          Float    @default(0)
+  stockQuantity   Int      @default(0)
+  minStock        Int      @default(0)
+  imageUrl        String?
+  cloudStoragePath String?
+  isPublic        Boolean  @default(true)
+  isActive        Boolean  @default(true)
+  categoryId      String?
+  supplierId      String?
+  companyId       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Cost engine fields
+  avgCost           Float    @default(0)
+  lastCost          Float    @default(0)
+  replacementCost   Float    @default(0)
+
+  category          Category?          @relation(fields: [categoryId], references: [id])
+  supplier          Supplier?          @relation(fields: [supplierId], references: [id])
+  company           Company            @relation(fields: [companyId], references: [id])
+  saleItems         SaleItem[]
+  inventoryMovements InventoryMovement[]
+  variations        ProductVariation[]
+  priceTables       PriceTable[]
+  stockEntryItems   StockEntryItem[]
+  costHistory       CostHistory[]
+
+  @@unique([sku, companyId], name: "unique_sku_per_company")
+  @@index([companyId])
+  @@index([categoryId])
+  @@index([supplierId])
+  @@map("products")
+}
+
+model ProductVariation {
+  id            String   @id @default(cuid())
+  productId     String
+  color         String?
+  size          String?
+  grade         String?
+  sku           String?
+  barcode       String?
+  costPrice     Float    @default(0)
+  salePrice     Float    @default(0)
+  stockQuantity Int      @default(0)
+  minStock      Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Cost engine fields
+  avgCost         Float    @default(0)
+  lastCost        Float    @default(0)
+  replacementCost Float    @default(0)
+
+  product            Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  saleItems          SaleItem[]
+  inventoryMovements InventoryMovement[]
+  stockEntryItems    StockEntryItem[]
+
+  @@index([productId])
+  @@index([barcode])
+  @@index([sku])
+  @@map("product_variations")
+}
+
+model Customer {
+  id            String   @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  whatsapp      String?
+  cpfCnpj       String?
+  city          String?
+  state         String?
+  type          String   @default("varejo")
+  tags          String[] @default([])
+  totalPurchased Float   @default(0)
+  avgTicket     Float    @default(0)
+  lastPurchase  DateTime?
+  purchaseCount Int      @default(0)
+  companyId     String
+  sellerId      String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company       Company  @relation(fields: [companyId], references: [id])
+  seller        Seller?  @relation(fields: [sellerId], references: [id])
+  sales         Sale[]
+  receivables   AccountReceivable[]
+  credit        CustomerCredit?
+  installments  Installment[]
+
+  @@index([companyId])
+  @@index([type])
+  @@index([sellerId])
+  @@map("customers")
+}
+
+model Sale {
+  id              String     @id @default(cuid())
+  saleNumber      Int        @default(autoincrement())
+  companySaleNumber Int?     // Numeração sequencial por empresa (exibição). saleNumber permanece como referência técnica global.
+  customerId      String?
+  sellerId        String?
+  companyId       String
+  subtotal        Float      @default(0)
+  discount        Float      @default(0)
+  total           Float      @default(0)
+  paymentMethod   String     @default("dinheiro")
+  status          String     @default("concluida")
+  notes           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Audit fields
+  createdById     String?    // User ID who created/launched this sale
+  createdByName   String?    // Name of user who created
+  updatedById     String?    // User ID who last edited
+  updatedByName   String?    // Name of user who last edited
+  editHistory     String?    // JSON string tracking edit history
+
+  customer        Customer?  @relation(fields: [customerId], references: [id])
+  seller          User?      @relation(fields: [sellerId], references: [id])
+  company         Company       @relation(fields: [companyId], references: [id])
+  items           SaleItem[]
+  payments        SalePayment[]
+  installments    Installment[]
+
+  @@unique([companyId, companySaleNumber])
+  @@index([companyId])
+  @@index([customerId])
+  @@index([sellerId])
+  @@index([createdAt])
+  @@map("sales")
+}
+
+model SaleItem {
+  id              String  @id @default(cuid())
+  saleId          String
+  productId       String
+  variationId     String?
+  quantity        Int     @default(1)
+  unitPrice       Float   @default(0)
+  discount        Float   @default(0)
+  total           Float   @default(0)
+  // Price table tracking fields (nullable for backward compatibility)
+  priceTableId    String?
+  priceTableName  String?
+  originalPrice   Float?
+  appliedPrice    Float?
+  priceDiscount   Float?
+
+  sale        Sale              @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product     Product           @relation(fields: [productId], references: [id])
+  variation   ProductVariation? @relation(fields: [variationId], references: [id])
+  priceTable  PriceTable?       @relation(fields: [priceTableId], references: [id])
+
+  @@index([saleId])
+  @@index([productId])
+  @@index([variationId])
+  @@index([priceTableId])
+  @@map("sale_items")
+}
+
+model InventoryMovement {
+  id            String   @id @default(cuid())
+  productId     String
+  variationId   String?
+  companyId     String
+  type          String   // entrada, saida, ajuste_manual, inventario, venda, cancelamento, reserva, devolucao, entrada_mercadoria
+  quantity      Int
+  previousQty   Int      @default(0)
+  newQty        Int      @default(0)
+  reason        String?
+  reference     String?
+  stockEntryId  String?
+  userId        String?
+  userName      String?
+  createdAt     DateTime @default(now())
+
+  product       Product            @relation(fields: [productId], references: [id])
+  variation     ProductVariation?  @relation(fields: [variationId], references: [id])
+  company       Company            @relation(fields: [companyId], references: [id])
+  stockEntry    StockEntry?        @relation(fields: [stockEntryId], references: [id])
+
+  @@index([companyId])
+  @@index([productId])
+  @@index([variationId])
+  @@index([createdAt])
+  @@index([type])
+  @@index([stockEntryId])
+  @@map("inventory_movements")
+}
+
+model StockEntry {
+  id              String    @id @default(cuid())
+  entryNumber     Int       @default(autoincrement())
+  companyId       String
+  supplierId      String?
+  status          String    @default("confirmada") // confirmada, cancelada
+  subtotal        Float     @default(0)
+  freight         Float     @default(0)
+  otherExpenses   Float     @default(0)
+  totalCost       Float     @default(0)
+  paymentMethod   String    @default("a_vista") // a_vista, parcelado
+  installments    Int       @default(1)
+  notes           String?
+  updateAvgCost   Boolean   @default(true)
+  cancelReason    String?
+  cancelledAt     DateTime?
+  cancelledById   String?
+  cancelledByName String?
+  createdById     String?
+  createdByName   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id])
+  supplier        Supplier?       @relation(fields: [supplierId], references: [id])
+  items           StockEntryItem[]
+  movements       InventoryMovement[]
+  accountsPayable AccountPayable[]
+
+  @@index([companyId])
+  @@index([supplierId])
+  @@index([createdAt])
+  @@index([status])
+  @@map("stock_entries")
+}
+
+model StockEntryItem {
+  id              String   @id @default(cuid())
+  stockEntryId    String
+  productId       String
+  variationId     String?
+  quantity        Int      @default(0)
+  unitCost        Float    @default(0)
+  totalCost       Float    @default(0)
+  previousAvgCost Float    @default(0)
+  newAvgCost      Float    @default(0)
+  createdAt       DateTime @default(now())
+
+  stockEntry      StockEntry        @relation(fields: [stockEntryId], references: [id], onDelete: Cascade)
+  product         Product           @relation(fields: [productId], references: [id])
+  variation       ProductVariation? @relation(fields: [variationId], references: [id])
+
+  @@index([stockEntryId])
+  @@index([productId])
+  @@index([variationId])
+  @@map("stock_entry_items")
+}
+
+model CostHistory {
+  id              String   @id @default(cuid())
+  productId       String
+  variationId     String?
+  companyId       String
+  previousCost    Float    @default(0)
+  newCost         Float    @default(0)
+  costType        String   // avg_cost, last_cost, replacement_cost
+  reason          String?  // entrada_mercadoria, ajuste_manual, importacao
+  reference       String?
+  userId          String?
+  userName        String?
+  createdAt       DateTime @default(now())
+
+  product         Product  @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+  @@index([companyId])
+  @@index([createdAt])
+  @@map("cost_history")
+}
+
+model FinancialCategory {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  companyId   String
+  createdAt   DateTime @default(now())
+
+  company     Company  @relation(fields: [companyId], references: [id])
+  records     FinancialRecord[]
+
+  @@index([companyId])
+  @@map("financial_categories")
+}
+
+model FinancialRecord {
+  id              String   @id @default(cuid())
+  description     String
+  amount          Float
+  type            String
+  paymentMethod   String?
+  categoryId      String?
+  accountPlanId   String?
+  cashAccountId   String?  // Caixa vinculado (obrigatório para lançamentos manuais)
+  cashMovementId  String?  // CashMovement correspondente (link 1:1)
+  companyId       String
+  reference       String?
+  date            DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  category        FinancialCategory? @relation(fields: [categoryId], references: [id])
+  accountPlan     AccountPlan?       @relation(fields: [accountPlanId], references: [id])
+  company         Company            @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([type])
+  @@index([date])
+  @@index([accountPlanId])
+  @@index([cashAccountId])
+  @@index([cashMovementId])
+  @@map("financial_records")
+}
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String?
+  whatsapp    String?
+  email       String?
+  city        String?
+  state       String?
+  cnpj        String?
+  notes       String?
+  companyId   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company  @relation(fields: [companyId], references: [id])
+  products    Product[]
+  accountsPayable AccountPayable[]
+  stockEntries    StockEntry[]
+
+  @@index([companyId])
+  @@map("suppliers")
+}
+
+model Carrier {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String?
+  city        String?
+  state       String?
+  notes       String?
+  companyId   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@map("carriers")
+}
+
+model Seller {
+  id              String     @id @default(cuid())
+  name            String
+  phone           String?
+  commissionRate  Float      @default(5)
+  canEditPrice    Boolean    @default(false)
+  isActive        Boolean    @default(true)
+  companyId       String
+  userId          String?    @unique
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  company         Company    @relation(fields: [companyId], references: [id])
+  user            User?      @relation(fields: [userId], references: [id])
+  customers       Customer[]
+
+  @@index([companyId])
+  @@map("sellers")
+}
+
+model AccountPayable {
+  id              String    @id @default(cuid())
+  description     String
+  amount          Float
+  dueDate         DateTime
+  paidDate        DateTime?
+  status          String    @default("pendente")
+  supplierId      String?
+  categoryId      String?
+  stockEntryId    String?
+  companyId       String
+  notes           String?
+  installmentNum  Int?
+  totalInstallments Int?
+  isRecurring     Boolean   @default(false)
+  recurringPeriodicity String?
+  recurringEndDate DateTime?
+  parentRecurringId String?
+  accountPlanId   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  supplier        Supplier?   @relation(fields: [supplierId], references: [id])
+  stockEntry      StockEntry? @relation(fields: [stockEntryId], references: [id])
+  company         Company     @relation(fields: [companyId], references: [id])
+  accountPlan     AccountPlan? @relation("AccountPlanPayables", fields: [accountPlanId], references: [id])
+
+  @@index([companyId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([stockEntryId])
+  @@index([isRecurring])
+  @@index([accountPlanId])
+  @@map("accounts_payable")
+}
+
+model AccountReceivable {
+  id              String    @id @default(cuid())
+  description     String
+  amount          Float
+  dueDate         DateTime
+  receivedDate    DateTime?
+  status          String    @default("pendente")
+  customerId      String?
+  saleId          String?
+  accountPlanId   String?
+  companyId       String
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  accountPlan     AccountPlan? @relation(fields: [accountPlanId], references: [id])
+  company         Company   @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([customerId])
+  @@index([accountPlanId])
+  @@map("accounts_receivable")
+}
+
+model CashAccount {
+  id              String    @id @default(cuid())
+  name            String
+  type            String    @default("dinheiro") // dinheiro, banco, pix, cartao
+  initialBalance  Float     @default(0)
+  currentBalance  Float     @default(0)
+  isActive        Boolean   @default(true)
+  notes           String?
+  companyId       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  company              Company   @relation(fields: [companyId], references: [id])
+  paymentMethods       PaymentMethod[]
+  movements            CashMovement[]
+  sessions             CashSession[]
+  installmentPayments  InstallmentPayment[]
+
+  @@index([companyId])
+  @@map("cash_accounts")
+}
+
+model CashMovement {
+  id              String    @id @default(cuid())
+  cashAccountId   String
+  companyId       String
+  type            String    // entrada, saida, transferencia_entrada, transferencia_saida
+  amount          Float
+  balanceBefore   Float     @default(0)
+  balanceAfter    Float     @default(0)
+  origin          String    // venda_pdv, ajuste_manual, transferencia, recebimento_cartao, pagamento_conta, entrada_financeira, saida_financeira, sangria, reforco
+  description     String
+  reference       String?   // e.g. Venda #152, Conta #45
+  userId          String?
+  userName        String?
+  notes           String?
+  linkedMovementId String?  // for transfers — links to the counterpart movement
+  cashSessionId   String?
+  createdAt       DateTime  @default(now())
+
+  cashAccount     CashAccount  @relation(fields: [cashAccountId], references: [id])
+  company         Company      @relation(fields: [companyId], references: [id])
+  cashSession     CashSession? @relation(fields: [cashSessionId], references: [id])
+
+  @@index([cashAccountId])
+  @@index([companyId])
+  @@index([createdAt])
+  @@index([type])
+  @@index([origin])
+  @@index([cashSessionId])
+  @@map("cash_movements")
+}
+
+model CashSession {
+  id              String    @id @default(cuid())
+  cashAccountId   String
+  companyId       String
+  status          String    @default("aberto") // aberto, fechado
+  openingBalance  Float     @default(0)
+  closingBalance  Float?
+  expectedBalance Float?
+  informedBalance Float?
+  difference      Float?
+  openedById      String?
+  openedByName    String?
+  closedById      String?
+  closedByName    String?
+  openedAt        DateTime  @default(now())
+  closedAt        DateTime?
+  closingNotes    String?
+
+  // Breakdown at closing
+  totalSales      Float?    @default(0)
+  totalCash       Float?    @default(0)
+  totalPix        Float?    @default(0)
+  totalCard       Float?    @default(0)
+  totalEntries    Float?    @default(0)
+  totalExits      Float?    @default(0)
+  totalSangrias   Float?    @default(0)
+  totalReforcos   Float?    @default(0)
+
+  cashAccount     CashAccount  @relation(fields: [cashAccountId], references: [id])
+  company         Company      @relation(fields: [companyId], references: [id])
+  movements       CashMovement[]
+
+  @@index([cashAccountId])
+  @@index([companyId])
+  @@index([status])
+  @@index([openedAt])
+  @@map("cash_sessions")
+}
+
+model PaymentMethod {
+  id                String    @id @default(cuid())
+  name              String
+  type              String    @default("dinheiro") // dinheiro, pix, cartao_credito, cartao_debito, boleto, transferencia, outro
+  cashAccountId     String
+  defaultDays       Int       @default(0)
+  feePercent        Float     @default(0)
+  feeFixed          Float     @default(0)
+  businessDays      Boolean   @default(false) // true = dias uteis, false = dias corridos
+  isActive          Boolean   @default(true)
+  companyId         String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  cashAccount       CashAccount @relation(fields: [cashAccountId], references: [id])
+  company           Company     @relation(fields: [companyId], references: [id])
+  salePayments      SalePayment[]
+
+  @@index([companyId])
+  @@index([cashAccountId])
+  @@map("payment_methods")
+}
+
+model SalePayment {
+  id                String    @id @default(cuid())
+  saleId            String
+  paymentMethodId   String
+  amount            Float
+  feePercent        Float     @default(0)
+  feeAmount         Float     @default(0)
+  netAmount         Float     @default(0)
+  expectedDate      DateTime
+  received          Boolean   @default(false)
+  receivedDate      DateTime?
+  cashAccountId     String
+  companyId         String
+  createdAt         DateTime  @default(now())
+
+  sale              Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  paymentMethod     PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  company           Company       @relation(fields: [companyId], references: [id])
+
+  @@index([saleId])
+  @@index([paymentMethodId])
+  @@index([cashAccountId])
+  @@index([companyId])
+  @@index([expectedDate])
+  @@map("sale_payments")
+}
+
+model IAMemory {
+  id          String    @id @default(cuid())
+  companyId   String
+  type        String    @default("long")
+  category    String    @default("general")
+  content     String
+  metadata    String?
+  importance  Int       @default(5)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  company     Company   @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([type])
+  @@index([category])
+  @@map("ia_memories")
+}
+
+model IAConversation {
+  id          String   @id @default(cuid())
+  companyId   String
+  userId      String?
+  title       String?
+  messages    String
+  summary     String?
+  tags        String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([createdAt])
+  @@map("ia_conversations")
+}
+
+model IAOperationalContext {
+  id          String   @id @default(cuid())
+  companyId   String
+  period      String   @default("daily")
+  summary     String
+  metrics     String
+  trends      String?
+  createdAt   DateTime @default(now())
+
+  company     Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([period])
+  @@index([createdAt])
+  @@map("ia_operational_contexts")
+}
+
+model IAAlert {
+  id          String    @id @default(cuid())
+  companyId   String
+  type        String    @default("observation")
+  category    String    @default("general")
+  title       String
+  description String
+  suggestion  String?
+  impact      String?
+  isResolved  Boolean   @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  metadata    String?
+  createdAt   DateTime  @default(now())
+
+  company     Company   @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([type])
+  @@index([isResolved])
+  @@index([createdAt])
+  @@map("ia_alerts")
+}
+
+model Automation {
+  id          String    @id @default(cuid())
+  companyId   String
+  name        String
+  description String?
+  category    String    @default("general")
+  trigger     String
+  actions     String
+  isActive    Boolean   @default(true)
+  lastRun     DateTime?
+  runCount    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  company     Company   @relation(fields: [companyId], references: [id])
+  logs        AutomationLog[]
+
+  @@index([companyId])
+  @@index([isActive])
+  @@map("automations")
+}
+
+model AutomationLog {
+  id           String     @id @default(cuid())
+  automationId String
+  status       String     @default("success")
+  result       String?
+  executedAt   DateTime   @default(now())
+
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@index([automationId])
+  @@index([executedAt])
+  @@map("automation_logs")
+}
+
+model WhatsAppConfig {
+  id          String    @id @default(cuid())
+  companyId   String    @unique
+  provider    String    @default("evolution")
+  apiUrl      String?
+  apiKey      String?
+  instanceId  String?
+  status      String    @default("disconnected")
+  phone       String?
+  isActive    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  company     Company   @relation(fields: [companyId], references: [id])
+  messages    WhatsAppMessage[]
+
+  @@map("whatsapp_configs")
+}
+
+model WhatsAppMessage {
+  id          String   @id @default(cuid())
+  configId    String
+  direction   String   @default("incoming")
+  phone       String
+  content     String
+  aiResponse  String?
+  status      String   @default("sent")
+  createdAt   DateTime @default(now())
+
+  config      WhatsAppConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@index([configId])
+  @@index([createdAt])
+  @@map("whatsapp_messages")
+}
+
+model MessageTemplate {
+  id          String   @id @default(cuid())
+  companyId   String
+  type        String   @default("agradecimento")
+  name        String
+  content     String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@map("message_templates")
+}
+
+
+model ImportLog {
+  id              String   @id @default(cuid())
+  companyId       String
+  type            String   // clientes, produtos, estoque
+  fileName        String
+  totalRows       Int      @default(0)
+  imported        Int      @default(0)
+  updated         Int      @default(0)
+  errors          Int      @default(0)
+  skipped         Int      @default(0)
+  errorDetails    Json?
+  importedById    String?
+  importedByName  String?
+  createdAt       DateTime @default(now())
+
+  company         Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([createdAt])
+  @@map("import_logs")
+}
+
+model AccountPlan {
+  id          String   @id @default(cuid())
+  name        String
+  code        String?
+  type        String   // receita, despesa, custo, investimento, financeiro
+  dreGroup    String?
+  showInDre   Boolean  @default(true)
+  parentId    String?
+  isActive    Boolean  @default(true)
+  isSystem    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  companyId   String
+  createdAt   DateTime @default(now())
+
+  parent      AccountPlan?  @relation("AccountPlanTree", fields: [parentId], references: [id])
+  children    AccountPlan[] @relation("AccountPlanTree")
+  company     Company       @relation(fields: [companyId], references: [id])
+  financialRecords  FinancialRecord[]
+  accountPayables   AccountPayable[] @relation("AccountPlanPayables")
+  accountReceivables AccountReceivable[]
+  ledgerEntries     LedgerEntry[]
+
+  @@index([companyId])
+  @@index([type])
+  @@index([parentId])
+  @@map("account_plans")
+}
+
+model AiClassificationLog {
+  id                    String   @id @default(cuid())
+  description           String
+  amount                Float?
+  type                  String?
+  suggestedAccountPlanId String?
+  suggestedAccountName  String?
+  acceptedAccountPlanId String?
+  accepted              Boolean  @default(false)
+  corrected             Boolean  @default(false)
+  confidence            Float?
+  explanation           String?
+  companyId             String
+  createdAt             DateTime @default(now())
+
+  company               Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([createdAt])
+  @@map("ai_classification_logs")
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  action      String   // signup, login, plan_change, status_change, company_edit, reset_data, etc.
+  description String
+  entityType  String?  // company, user, sale, etc.
+  entityId    String?
+  metadata    Json?
+  companyId   String?
+  userId      String?
+  userName    String?
+  createdAt   DateTime @default(now())
+
+  company     Company? @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([createdAt])
+  @@index([action])
+  @@map("activity_logs")
+}
+
+model PriceTable {
+  id            String   @id @default(cuid())
+  name          String
+  minQuantity   Int      @default(1)
+  unitPrice     Float
+  notes         String?
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  productId     String
+  companyId     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  company       Company  @relation(fields: [companyId], references: [id])
+  saleItems     SaleItem[]
+
+  @@index([productId])
+  @@index([companyId])
+  @@index([productId, isActive])
+  @@map("price_tables")
+}
+
+model LedgerEntry {
+  id            String   @id @default(cuid())
+  companyId     String
+  date          DateTime
+  accountPlanId String
+  debit         Float    @default(0)
+  credit        Float    @default(0)
+  description   String
+  sourceType    String   // sale, cancellation, ar_receipt, ap_payment, manual_entry, stock_entry, adjustment
+  sourceId      String?  // ID do registro de origem
+  batchId       String   // agrupa débito+crédito do mesmo lançamento
+  createdAt     DateTime @default(now())
+
+  company       Company      @relation(fields: [companyId], references: [id])
+  accountPlan   AccountPlan  @relation(fields: [accountPlanId], references: [id])
+
+  @@index([companyId])
+  @@index([companyId, date])
+  @@index([companyId, accountPlanId])
+  @@index([sourceType, sourceId])
+  @@index([batchId])
+  @@map("ledger_entries")
+}
+// ============================================================
+// FASE 8 — Crediário
+// ============================================================
+model CustomerCredit {
+  id              String   @id @default(cuid())
+  customerId      String   @unique
+  companyId       String
+  creditLimit     Float    @default(0)
+  usedLimit       Float    @default(0)
+  defaultTermDays Int      @default(30)
+  status          String   @default("ACTIVE") // ACTIVE, BLOCKED
+  blockReason     String?  // MANUAL (bloqueio manual) | AUTO_OVERDUE (bloqueio por inadimplência) | null
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  customer        Customer @relation(fields: [customerId], references: [id])
+  company         Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([customerId])
+  @@index([status])
+  @@map("customer_credits")
+}
+
+model Installment {
+  id                 String    @id @default(cuid())
+  saleId             String
+  customerId         String
+  companyId          String
+  installmentNumber  Int
+  amount             Float
+  paidAmount         Float     @default(0)
+  dueDate            DateTime
+  status             String    @default("PENDING") // PENDING, PARTIAL, PAID, OVERDUE, CANCELLED, RENEGOTIATED
+  notes              String?
+  renegotiationRef   String?   // Referência do acordo (liga parcelas antigas ↔ novas)
+  replacedByRef      String?   // Parcela antiga: ref do acordo que a substituiu
+  renegotiatedAt     DateTime? // Data da renegociação
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  sale               Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  customer           Customer  @relation(fields: [customerId], references: [id])
+  company            Company   @relation(fields: [companyId], references: [id])
+  payments           InstallmentPayment[]
+
+  @@index([companyId])
+  @@index([customerId])
+  @@index([saleId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([renegotiationRef])
+  @@map("installments")
+}
+
+model InstallmentPayment {
+  id              String   @id @default(cuid())
+  installmentId   String
+  companyId       String
+  amount          Float
+  paymentDate     DateTime @default(now())
+  cashAccountId   String
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  installment     Installment  @relation(fields: [installmentId], references: [id], onDelete: Cascade)
+  company         Company      @relation(fields: [companyId], references: [id])
+  cashAccount     CashAccount  @relation(fields: [cashAccountId], references: [id])
+
+  @@index([installmentId])
+  @@index([companyId])
+  @@map("installment_payments")
+}
+
+// ============================================================
+// FASE 7 — Backup, Recovery & Continuidade Operacional
+// Tabela ADITIVA: registra metadados de cada backup lógico por empresa.
+// Não altera nenhuma tabela existente nem nenhuma regra de negócio.
+// ============================================================
+model BackupRecord {
+  id               String    @id @default(cuid())
+  companyId        String?   // nullable: registro do backup sobrevive à exclusão da empresa
+  companyName      String
+  type             String    @default("manual")   // manual | auto | pre_delete
+  status           String    @default("pending")  // pending | running | completed | failed
+  version          String
+  cloudStoragePath String?   // caminho no S3 (armazenamento principal)
+  fileSizeBytes    Int?
+  recordCounts     Json?     // { model: count }
+  totalRecords     Int       @default(0)
+  durationMs       Int?
+  appCheckpoint    String?   // commit/checkpoint da app no momento do backup
+  schemaVersion    String?
+  error            String?
+  createdById      String?
+  createdByName    String?
+  startedAt        DateTime  @default(now())
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([companyId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@map("backup_records")
+}
+
+// FASE 7 — ETAPA 5: configuração (singleton) de backup automático + retenção.
+// Aditivo: NÃO altera nenhum modelo existente. id fixo "global".
+model BackupSchedule {
+  id               String   @id @default("global")
+  enabled          Boolean  @default(true)
+  hourBrt          Int      @default(3)   // hora local BRT do disparo (0-23)
+  retentionDaily   Int      @default(7)
+  retentionWeekly  Int      @default(4)
+  retentionMonthly Int      @default(12)
+  scope            String   @default("active") // active = todas empresas ativas
+  lastRunAt        DateTime?
+  lastRunStatus    String?  // running | completed | failed
+  lastRunSummary   Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("backup_schedules")
+}
+
+// ============================================================
+// DEMO OFICIAL — Snapshot integral da empresa "Loja Modelo PushSisten".
+// Tabela ADITIVA: guarda o estado canônico DEMO_V1 (payload completo em JSON)
+// para restauração destrutiva IN-PLACE apenas na empresa DEMO.
+// Não altera nenhuma tabela existente nem regra de negócio.
+// ============================================================
+model DemoSnapshot {
+  id            String   @id @default(cuid())
+  label         String   @unique // 'DEMO_V1' — único, nunca duplicado
+  companyId     String
+  companyName   String
+  version       String   @default("1.0")
+  payload       Json     // envelope completo { datasets: { model: rows[] } }
+  recordCounts  Json     // contagem por model no momento da captura
+  totalRecords  Int      @default(0)
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("demo_snapshots")
+}
+
+// ============================================================
+// PUSH SCORE™ — FUNDAÇÃO DE DADOS (PRIORIDADE 3.2)
+// Apenas estrutura de persistência/configuração/histórico.
+// NÃO contém engine de cálculo, scheduler, dashboard ou IA.
+// ============================================================
+
+// Snapshot histórico do Push Score de uma empresa em uma data.
+// Guarda: resultado final, classificação textual, cada sub-score
+// (componentes) e os insumos brutos (rawMetrics) que geraram o score,
+// permitindo auditoria futura ("por que o score era X no dia Y?").
+model PushScoreSnapshot {
+  id                String   @id @default(cuid())
+  companyId         String
+  date              DateTime // dia de referência do snapshot (BRT)
+
+  // status estrutural: EM_FORMACAO (dados insuficientes) | ATIVO
+  status            String   @default("EM_FORMACAO")
+
+  // resultado final 0-100 (nullable enquanto EM_FORMACAO / antes do cálculo)
+  score             Float?
+  // classificação textual: SAUDAVEL | ESTAVEL | ATENCAO | RISCO | CRITICO
+  classification    String?
+
+  // componentes (sub-scores 0-100 por dimensão) — nullable até serem calculados
+  rentabilityScore  Float?   // Rentabilidade (peso 25%)
+  liquidityScore    Float?   // Liquidez (peso 20%)
+  inventoryScore    Float?   // Saúde do Estoque = 50% Giro + 50% Capital Parado (peso 15%)
+  defaultScore      Float?   // Inadimplência (peso 15%)
+  customerBaseScore Float?   // Base de Clientes (peso 15%)
+  growthScore       Float?   // Crescimento (peso 10%)
+
+  // insumos brutos que geraram o score (auditoria) — ex:
+  // { margemLiquida, cashMonths, capitalParadoPct, giroEstoque,
+  //   inadimplenciaPct, crescimentoPct, clientesAtivosPct, ... }
+  rawMetrics        Json?
+
+  // pesos efetivamente aplicados neste snapshot (auditoria de repesagem
+  // dinâmica — ex.: empresa sem crediário redistribui o peso da inadimplência)
+  appliedWeights    Json?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  company           Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, date])           // 1 snapshot por empresa por dia (idempotência)
+  @@index([companyId])                   // histórico por empresa
+  @@index([companyId, date])             // consultas por data / tendências
+  @@index([companyId, status])           // filtrar EM_FORMACAO vs ATIVO
+  @@map("push_score_snapshots")
+}
+
+// Configuração de pesos do Push Score.
+// companyId nulo = configuração GLOBAL (benchmark padrão da plataforma).
+// companyId preenchido = override por empresa (ajuste sem alterar código).
+model PushScoreConfig {
+  id                String   @id @default(cuid())
+  companyId         String?  // null = config global; preenchido = override da empresa
+
+  // pesos por dimensão (0-100, devem somar 100) — defaults V1 oficiais
+  rentabilityWeight Float    @default(25)
+  liquidityWeight   Float    @default(20)
+  inventoryWeight   Float    @default(15)
+  defaultWeight     Float    @default(15)
+  customerWeight    Float    @default(15)
+  growthWeight      Float    @default(10)
+
+  active            Boolean  @default(true)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  company           Company? @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId])     // no máximo 1 config por empresa (e 1 global com companyId null)
+  @@index([active])
+  @@map("push_score_configs")
+}
+
+// Insights Engine — insights acionáveis gerados deterministicamente
+// Persistidos por empresa+dia para auditoria e consumo futuro (IA Gerente, dashboard, automações)
+model Insight {
+  id              String   @id @default(cuid())
+  companyId       String
+  date            DateTime // dia BRT do insight (normalizado 00:00)
+  type            String   // ESTOQUE | CLIENTE | FINANCEIRO | CREDIARIO
+  code            String   // código único do insight (ex: ESTOQUE_PARADO, CLIENTE_SUMIDO)
+  severity        String   // ALTO | MEDIO | BAIXO
+  message         String   // mensagem em PT-BR acionável
+  relatedMetrics  Json?    // dados de suporte (IDs, valores, thresholds)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  company         Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, date, code], name: "unique_insight_per_company_day_code")
+  @@index([companyId])
+  @@index([companyId, date])
+  @@index([companyId, type])
+  @@index([severity])
+  @@map("insights")
+}
+
+// Automation Engine (PRIORIDADE 6) — fila oficial de ações automatizáveis
+// Gerada a partir da IA Gerente 2.0 (que consome Insights Engine + Push Score).
+// NÃO executa envios reais nesta fase: gera ação + registra log + deixa pronto para execução futura.
+// Idempotente por companyId+date+type+reference. Multiempresa. Auditável.
+model AutomationAction {
+  id           String    @id @default(cuid())
+  companyId    String
+  date         DateTime  // dia BRT (normalizado 00:00) para idempotência
+  type         String    // ALERTA_INTERNO | CLIENTE_INATIVO | COBRANCA_CREDIARIO | PRODUTO_PARADO | ESTOQUE_BAIXO | RELATORIO_GERENCIAL
+  status       String    @default("PENDENTE") // PENDENTE | EXECUTADO | IGNORADO | ERRO
+  severity     String    @default("BAIXO")    // ALTO | MEDIO | BAIXO
+  reference    String    // referência única dentro do dia+tipo (ex: código do insight)
+  title        String    // título curto da ação (PT-BR)
+  description  String    // descrição/contexto da ação (PT-BR)
+  channel      String    @default("INTERNO")  // INTERNO | WHATSAPP | EMAIL (futuro) — apenas rótulo, sem envio real
+  payload      Json?     // dados estruturados (template de mensagem, alvos, métricas)
+  insightCode  String?   // código do insight relacionado (rastreabilidade)
+  pushScoreImpact Int    @default(0) // impacto estimado no Push Score (0-3)
+  executedAt   DateTime? // quando foi marcada como executada/ignorada
+  error        String?   // mensagem de erro se status=ERRO
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  company      Company   @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, date, type, reference], name: "unique_action_per_company_day_type_ref")
+  @@index([companyId])
+  @@index([companyId, date])
+  @@index([companyId, status])
+  @@index([type])
+  @@map("automation_actions")
+}
+// ============================================================================
+// BILLING / ASSINATURAS (P8.4) — billing-engine é a fonte única.
+// plan-engine.ts continua sendo a fonte da verdade de PLANO/PREÇO/LIMITE.
+// Gateway (Mercado Pago hoje, Stripe no futuro) = APENAS processador de cobrança.
+// BillingPayment é ESPELHO HISTÓRICO — nenhuma regra de plano/acesso/status
+// depende diretamente dele. A verdade vem de: Gateway → Webhook → Billing Engine.
+// ============================================================================
+
+// Cliente de cobrança — desacopla a Company do gateway de pagamento.
+// 1:1 com Company. Permite trocar/adicionar provider sem migrar a Company.
+model BillingCustomer {
+  id                 String   @id @default(cuid())
+  companyId          String   @unique
+  provider           String   // mercadopago | stripe
+  externalCustomerId String?  // id do pagador/cliente no gateway (payer id MP / customer Stripe)
+  email              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  company       Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  subscriptions BillingSubscription[]
+
+  @@index([provider])
+  @@map("billing_customers")
+}
+
+// Assinatura vinculada ao gateway. Carrega os dados que ANTES estavam na Company.
+model BillingSubscription {
+  id                     String    @id @default(cuid())
+  billingCustomerId      String
+  provider               String    // mercadopago | stripe
+  externalSubscriptionId String?   // ex-mpPreapprovalId (id da assinatura no gateway)
+  plan                   String    // referência ao plan-engine (fonte da verdade)
+  priceAmount            Float     @default(0) // espelho do plan-engine no momento da venda
+  currency               String    @default("BRL")
+  cycle                  String    @default("monthly")
+  status                 String    @default("pending") // pending | authorized | active | paused | cancelled
+  nextBillingDate        DateTime?
+  lastPaymentDate        DateTime?
+  lastPaymentStatus      String?   // approved | rejected | refunded | pending
+  paymentMethodBrand     String?   // só exibição (nunca o cartão)
+  paymentMethodLast4     String?   // só exibição
+  startedAt              DateTime?
+  canceledAt             DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  billingCustomer BillingCustomer  @relation(fields: [billingCustomerId], references: [id], onDelete: Cascade)
+  payments        BillingPayment[]
+
+  @@index([billingCustomerId])
+  @@index([provider])
+  @@index([externalSubscriptionId])
+  @@index([status])
+  @@map("billing_subscriptions")
+}
+
+// Histórico de cobranças — ESPELHO. Não é fonte de verdade de nada.
+model BillingPayment {
+  id                    String    @id @default(cuid())
+  billingSubscriptionId String
+  provider              String    // mercadopago | stripe
+  externalPaymentId     String?   // id do pagamento no gateway
+  amount                Float     @default(0)
+  currency              String    @default("BRL")
+  status                String    // approved | rejected | refunded | pending | cancelled
+  method                String?   // credit_card | pix | boleto ...
+  paidAt                DateTime?
+  createdAt             DateTime  @default(now())
+
+  subscription BillingSubscription @relation(fields: [billingSubscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, externalPaymentId])
+  @@index([billingSubscriptionId])
+  @@index([status])
+  @@map("billing_payments")
+}
+
+// Eventos de webhook — idempotência + rastreabilidade. externalEventId único por provider.
+model WebhookEvent {
+  id              String    @id @default(cuid())
+  provider        String    // mercadopago | stripe
+  externalEventId String    // id único do evento/notificação no gateway
+  resourceId      String?   // id do recurso referenciado (payment/subscription)
+  type            String    // tipo do evento (payment, subscription_preapproval, ...)
+  payload         Json?
+  result          String?   // processed | ignored | error | duplicate
+  processedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@unique([provider, externalEventId])
+  @@index([provider, type])
+  @@index([resourceId])
+  @@map("webhook_events")
+}
+
+// Auditoria financeira ISOLADA (separada do ActivityLog operacional).
+// event: CHECKOUT_CREATED | CHECKOUT_COMPLETED | PAYMENT_APPROVED | PAYMENT_REJECTED |
+//        PAYMENT_REFUNDED | SUBSCRIPTION_CREATED | SUBSCRIPTION_UPDATED |
+//        SUBSCRIPTION_CANCELLED | PLAN_UPGRADED | PLAN_DOWNGRADED |
+//        PAST_DUE_ENTERED | PAST_DUE_EXITED | SUSPENDED | REACTIVATED
+model BillingAuditLog {
+  id          String   @id @default(cuid())
+  companyId   String
+  event       String
+  description String
+  fromPlan    String?
+  toPlan      String?
+  amount      Float?
+  provider    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([event])
+  @@index([createdAt])
+  @@map("billing_audit_logs")
+}

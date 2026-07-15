@@ -1,0 +1,44 @@
+{
+  "name": "PUSHY - Gerente da Sua Loja",
+  "short_name": "PUSHY",
+  "description": "O gerente inteligente da sua loja de roupas",
+  "start_url": "/hoje",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Central do Dia",
+      "short_name": "Hoje",
+      "url": "/hoje",
+      "description": "Veja o que fazer hoje"
+    },
+    {
+      "name": "PDV",
+      "short_name": "Vender",
+      "url": "/pdv",
+      "description": "Abrir ponto de venda"
+    },
+    {
+      "name": "IA Gerente",
+      "short_name": "IA",
+      "url": "/ia-gerente",
+      "description": "Falar com a IA Gerente"
+    }
+  ]
+}
