@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.env
+.env.bak_fase4
+.env.example
+*.sql
+*.sql.gz
+*.tar.gz
+README.md
+README-AUTOMACOES.md
+STYLE_GUIDE.md
