@@ -45,7 +45,6 @@ export default function RootLayout({
       <head>
         <meta name="theme-color" content="#1E3A5F" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <script src="https://apps.abacus.ai/chatllm/appllm-lib.js"></script>
       </head>
       <body
         className={`${dmSans.variable} ${jakartaSans.variable} ${inter.variable} ${jetbrainsMono.variable} font-sans`}

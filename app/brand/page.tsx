@@ -23,12 +23,12 @@ const BRAND = {
     { name: 'Code', font: 'JetBrains Mono', weight: 'Regular', usage: 'Valores monetários, códigos, dados' },
   ],
   images: [
-    { src: 'https://cdn.abacus.ai/images/77969587-4798-4077-bf27-0c528341333e.png', title: 'Logo Principal', desc: 'Símbolo geométrico + wordmark sobre fundo escuro. Variação primária para todas as aplicações digitais.' },
-    { src: 'https://cdn.abacus.ai/images/8d0aca9a-782c-4034-ae0e-5aa01c795f21.png', title: 'Dashboard Preview — Dark Mode', desc: 'Interface premium com glassmorphism, IA Gerente, gráficos inteligentes e métricas operacionais.' },
-    { src: 'https://cdn.abacus.ai/images/2279c79b-00b5-4345-917b-da7c6ff0b6df.png', title: 'Brand Identity Spread', desc: 'Apresentação completa: logo, paleta, tipografia, componentes e referências visuais do design system.' },
-    { src: 'https://cdn.abacus.ai/images/26c003b4-61b0-4fac-991c-307812af637b.png', title: 'App Icon', desc: 'Ícone minimalista para mobile, favicon e sidebar. Símbolo "P" com gradiente azul-roxo.' },
-    { src: 'https://cdn.abacus.ai/images/868fcb4d-88da-4d02-b807-df3ba777e6d2.png', title: 'Login Screen Concept', desc: 'Tela de login split-screen premium. Marca à esquerda, formulário limpo à direita.' },
-    { src: 'https://cdn.abacus.ai/images/ca69e437-f78b-49ca-9ea0-a2e6ca244295.png', title: 'Design System — Cores & Tipografia', desc: 'Referência técnica com swatches HEX, hierarquia tipográfica e escala de tamanhos.' },
+    { src: '/images/brand/77969587-4798-4077-bf27-0c528341333e.png', title: 'Logo Principal', desc: 'Símbolo geométrico + wordmark sobre fundo escuro. Variação primária para todas as aplicações digitais.' },
+    { src: '/images/brand/8d0aca9a-782c-4034-ae0e-5aa01c795f21.png', title: 'Dashboard Preview — Dark Mode', desc: 'Interface premium com glassmorphism, IA Gerente, gráficos inteligentes e métricas operacionais.' },
+    { src: '/images/brand/2279c79b-00b5-4345-917b-da7c6ff0b6df.png', title: 'Brand Identity Spread', desc: 'Apresentação completa: logo, paleta, tipografia, componentes e referências visuais do design system.' },
+    { src: '/images/brand/26c003b4-61b0-4fac-991c-307812af637b.png', title: 'App Icon', desc: 'Ícone minimalista para mobile, favicon e sidebar. Símbolo "P" com gradiente azul-roxo.' },
+    { src: '/images/brand/868fcb4d-88da-4d02-b807-df3ba777e6d2.png', title: 'Login Screen Concept', desc: 'Tela de login split-screen premium. Marca à esquerda, formulário limpo à direita.' },
+    { src: '/images/brand/ca69e437-f78b-49ca-9ea0-a2e6ca244295.png', title: 'Design System — Cores & Tipografia', desc: 'Referência técnica com swatches HEX, hierarquia tipográfica e escala de tamanhos.' },
   ],
 };
 

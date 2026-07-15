@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "pushsisten",
   "private": true,
   "scripts": {
     "dev": "next dev",
