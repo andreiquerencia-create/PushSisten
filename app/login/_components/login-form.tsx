@@ -41,6 +41,22 @@ export function LoginForm() {
         } else if ((session?.user as any)?.role === 'vendedor') {
           router.replace('/meu-painel');
         } else {
+          // Verificar se precisa de onboarding antes de redirecionar
+          try {
+            const userId = (session?.user as any)?.id;
+            const onbRes = await fetch(`/api/onboarding-check?userId=${userId}`, {
+              headers: { 'x-middleware-check': '1' },
+            });
+            if (onbRes.ok) {
+              const onbData = await onbRes.json();
+              if (onbData.needsOnboarding) {
+                router.replace('/onboarding');
+                return;
+              }
+            }
+          } catch {
+            // Fail-open: se checar falhar, segue para dashboard
+          }
           router.replace('/hoje');
         }
       }
