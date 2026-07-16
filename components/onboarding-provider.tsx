@@ -33,7 +33,24 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 export function useOnboardingContext(): OnboardingContextType {
   const ctx = useContext(OnboardingContext);
   if (!ctx) {
-    throw new Error('useOnboardingContext deve ser usado dentro de OnboardingProvider');
+    // Fallback silencioso: retorna no-op sem quebrar a renderização.
+    // Isso protege contra cenários onde o componente é renderizado
+    // fora da árvore do Provider (SSR, edge cases, etc).
+    return {
+      progress: null,
+      isLoading: false,
+      isOnboarding: false,
+      currentStep: null,
+      start: async () => {},
+      updateProfile: async () => {},
+      markProductCreated: async () => {},
+      markCustomerCreated: async () => {},
+      markSaleCompleted: async () => {},
+      markDashboardViewed: async () => {},
+      complete: async () => {},
+      abandon: async () => {},
+      resume: async () => {},
+    };
   }
   return ctx;
 }
