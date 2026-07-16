@@ -75,6 +75,7 @@ const SUBSCRIPTION_EXEMPT = [
   '/master',
   '/login',
   '/signup',
+  '/onboarding',
 ];
 
 export default withAuth(
@@ -121,6 +122,26 @@ export default withAuth(
         } catch {
           // If check fails, allow access (fail-open)
         }
+      }
+    }
+
+    // ─── ONBOARDING CHECK ───
+    // Non-master users: check if onboarding is needed (skip if already on /onboarding)
+    if (!token.isMaster && token.role !== 'vendedor' && !pathname.startsWith('/onboarding')) {
+      try {
+        const onboardingUrl = new URL('/api/onboarding-check', req.url);
+        onboardingUrl.searchParams.set('userId', token.id as string);
+        const onbRes = await fetch(onboardingUrl.toString(), {
+          headers: { 'x-middleware-check': '1' },
+        });
+        if (onbRes.ok) {
+          const onbData = await onbRes.json();
+          if (onbData.needsOnboarding) {
+            return NextResponse.redirect(new URL('/onboarding', req.url));
+          }
+        }
+      } catch {
+        // Fail-open: se checar falhar, não bloqueia
       }
     }
 
@@ -201,5 +222,6 @@ export const config = {
     '/auditoria/:path*',
     '/sem-classificacao/:path*',
     '/relatorios-inteligentes/:path*',
+    '/onboarding/:path*',
   ],
 };
