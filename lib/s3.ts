@@ -29,8 +29,12 @@ export async function generatePresignedUploadUrl(
 }
 
 export async function getFileUrl(cloud_storage_path: string, isPublic: boolean) {
-  const { bucketName } = getBucketConfig();
-  if (isPublic) {
+  const { bucketName, endpoint } = getBucketConfig();
+  if (isPublic && endpoint) {
+    // R2: use endpoint-based URL (or custom domain if configured)
+    return `${endpoint}/${bucketName}/${cloud_storage_path}`;
+  } else if (isPublic) {
+    // AWS S3 fallback
     const region = process.env.AWS_REGION ?? 'us-east-1';
     return `https://${bucketName}.s3.${region}.amazonaws.com/${cloud_storage_path}`;
   }
