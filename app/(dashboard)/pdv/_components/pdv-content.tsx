@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useOnboardingContext } from '@/components/onboarding-provider';
+import { OnboardingCelebration } from '@/components/onboarding-celebration';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,6 +74,10 @@ function calcExpectedDate(defaultDays: number, businessDays: boolean): Date {
 }
 
 export default function PDVContent({ editSaleId }: { editSaleId?: string }) {
+  const searchParams = useSearchParams();
+  const onboardingMode = searchParams.get('onboarding') === 'true';
+  const { markSaleCompleted } = useOnboardingContext();
+  const [showCelebration, setShowCelebration] = useState(false);
   const { data: session } = useSession() || {};
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
@@ -124,14 +130,42 @@ export default function PDVContent({ editSaleId }: { editSaleId?: string }) {
   const barcodeRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch('/api/produtos?limit=500').then(r => r.json()).then(d => setProducts(d.products || []));
-    fetch('/api/clientes?limit=500').then(r => r.json()).then(d => setCustomers(d.customers || []));
+    fetch('/api/produtos?limit=500').then(r => r.json()).then(d => {
+      const list = d.products || [];
+      setProducts(list);
+      // ONBOARDING: pré-selecionar o produto mais recente (último cadastrado)
+      if (onboardingMode && list.length > 0) {
+        const lastProduct = list[list.length - 1];
+        setCart([{
+          product: lastProduct,
+          quantity: 1,
+          unitPrice: lastProduct.salePrice || 0,
+          discount: 0,
+        }]);
+      }
+    });
+    fetch('/api/clientes?limit=500').then(r => r.json()).then(d => {
+      const list = d.customers || [];
+      setCustomers(list);
+      // ONBOARDING: pré-selecionar o cliente mais recente
+      if (onboardingMode && list.length > 0) {
+        const lastCustomer = list[list.length - 1];
+        setSelectedCustomer(lastCustomer.id);
+      }
+    });
     fetch('/api/vendedores').then(r => r.json()).then(d => setSellers(Array.isArray(d) ? d : (d?.sellers ?? [])));
-    fetch('/api/formas-pagamento?active=true').then(r => r.json()).then(d => setPaymentMethods(d.methods ?? []));
+    fetch('/api/formas-pagamento?active=true').then(r => r.json()).then(d => {
+      const methods = d.methods ?? [];
+      setPaymentMethods(methods);
+      // ONBOARDING: pré-selecionar o primeiro método de pagamento disponível
+      if (onboardingMode && methods.length > 0) {
+        setPaymentEntries([{ methodId: methods[0].id, amount: 0 }]);
+      }
+    });
     fetch('/api/empresa').then(r => r.json()).then(d => {
       if (d?.priceTableMinQtyBehavior) setPtMinQtyBehavior(d.priceTableMinQtyBehavior);
     }).catch(() => {});
-  }, []);
+  }, [onboardingMode]);
 
   // Auto-lock seller for vendedor role
   const userRole = (session?.user as any)?.role;
@@ -729,6 +763,20 @@ export default function PDVContent({ editSaleId }: { editSaleId?: string }) {
         isOrcamento: asOrcamento,
       });
       setSuccessDialog(true);
+
+      // ONBOARDING: marcar venda como completada
+      if (onboardingMode && !asOrcamento) {
+        try {
+          await markSaleCompleted();
+          // Após 2s, fecha o success e mostra celebração
+          setTimeout(() => {
+            setSuccessDialog(false);
+            setShowCelebration(true);
+          }, 1500);
+        } catch (e) {
+          console.error('Erro ao marcar venda no onboarding:', e);
+        }
+      }
 
       // Clear state
       setCart([]); setSelectedCustomer(''); setDiscountInput(0); setDiscountType('value'); setPaymentOpen(false); setPaymentEntries([]); setCrediarioConfig({ parcelas: 2, termDays: 30 });
@@ -1386,6 +1434,17 @@ export default function PDVContent({ editSaleId }: { editSaleId?: string }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Onboarding Celebration */}
+      {showCelebration && (
+        <OnboardingCelebration
+          emoji="🎉"
+          title="Parabéns."
+          subtitle="Sua primeira venda foi registrada."
+          autoClose={2500}
+          onAction={() => router.push('/dashboard?onboarding=true')}
+        />
+      )}
 
       {/* Success Dialog */}
       <Dialog open={successDialog} onOpenChange={setSuccessDialog}>

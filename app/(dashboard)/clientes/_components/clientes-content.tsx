@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/app-header';
+import { useOnboardingContext } from '@/components/onboarding-provider';
+import { OnboardingCelebration } from '@/components/onboarding-celebration';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +32,12 @@ const formatWhatsAppNumber = (num: string | null | undefined): string | null => 
 };
 
 export function ClientesContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const onboardingMode = searchParams.get('onboarding') === 'true';
+  const { markCustomerCreated } = useOnboardingContext();
+  const [showCelebration, setShowCelebration] = useState(false);
+
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -36,7 +45,7 @@ export function ClientesContent() {
   const [tagFilter, setTagFilter] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(onboardingMode);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>({ name: '', email: '', phone: '', whatsapp: '', city: '', state: '', type: 'varejo', tags: [] });
   const [tab, setTab] = useState('lista');
@@ -71,7 +80,17 @@ export function ClientesContent() {
       const url = editing ? `/api/clientes/${editing.id}` : '/api/clientes';
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-      if (res.ok) { toast.success(editing ? 'Cliente atualizado!' : 'Cliente criado!'); setDialogOpen(false); fetchCustomers(); }
+      if (res.ok) {
+        if (onboardingMode && !editing) {
+          setDialogOpen(false);
+          await markCustomerCreated();
+          setShowCelebration(true);
+        } else {
+          toast.success(editing ? 'Cliente atualizado!' : 'Cliente criado!');
+          setDialogOpen(false);
+          fetchCustomers();
+        }
+      }
       else { const d = await res.json(); toast.error(d?.error ?? 'Erro'); }
     } catch { toast.error('Erro'); }
   };
@@ -248,21 +267,31 @@ export function ClientesContent() {
         </Tabs>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {showCelebration && (
+        <OnboardingCelebration
+          emoji="👤"
+          title="Cliente cadastrado."
+          autoClose={2000}
+          onAction={() => router.push('/pdv?onboarding=true')}
+        />
+      )}
+
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!onboardingMode || open) setDialogOpen(open); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="font-display">{editing ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="font-display">{onboardingMode ? 'Cadastre seu primeiro cliente' : editing ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle></DialogHeader>
+          {onboardingMode && <p className="text-sm text-muted-foreground mb-2">Apenas nome e telefone. Você pode completar depois.</p>}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2"><Label>Nome *</Label><Input value={form?.name??''} onChange={(e: any) => setForm({...(form??{}), name: e?.target?.value??''})} /></div>
-              <div><Label>Email</Label><Input type="email" value={form?.email??''} onChange={(e: any) => setForm({...(form??{}), email: e?.target?.value??''})} /></div>
+              <div className="col-span-2"><Label>Nome *</Label><Input value={form?.name??''} onChange={(e: any) => setForm({...(form??{}), name: e?.target?.value??''})} autoFocus /></div>
+              {!onboardingMode && <div><Label>Email</Label><Input type="email" value={form?.email??''} onChange={(e: any) => setForm({...(form??{}), email: e?.target?.value??''})} /></div>}
               <div><Label>Telefone</Label><Input value={form?.phone??''} onChange={(e: any) => setForm({...(form??{}), phone: e?.target?.value??''})} /></div>
-              <div><Label>WhatsApp</Label><Input value={form?.whatsapp??''} onChange={(e: any) => setForm({...(form??{}), whatsapp: e?.target?.value??''})} /></div>
-              <div><Label>Tipo</Label><select className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm" value={form?.type??'varejo'} onChange={(e: any) => setForm({...(form??{}), type: e?.target?.value??'varejo'})}>{Object.entries(typeLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
-              <div><Label>Cidade</Label><Input value={form?.city??''} onChange={(e: any) => setForm({...(form??{}), city: e?.target?.value??''})} /></div>
-              <div><Label>Estado</Label><Input value={form?.state??''} onChange={(e: any) => setForm({...(form??{}), state: e?.target?.value??''})} /></div>
+              {!onboardingMode && <div><Label>WhatsApp</Label><Input value={form?.whatsapp??''} onChange={(e: any) => setForm({...(form??{}), whatsapp: e?.target?.value??''})} /></div>}
+              {!onboardingMode && <div><Label>Tipo</Label><select className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm" value={form?.type??'varejo'} onChange={(e: any) => setForm({...(form??{}), type: e?.target?.value??'varejo'})}>{Object.entries(typeLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>}
+              {!onboardingMode && <div><Label>Cidade</Label><Input value={form?.city??''} onChange={(e: any) => setForm({...(form??{}), city: e?.target?.value??''})} /></div>}
+              {!onboardingMode && <div><Label>Estado</Label><Input value={form?.state??''} onChange={(e: any) => setForm({...(form??{}), state: e?.target?.value??''})} /></div>}
             </div>
-            <div><Label>Etiquetas</Label><div className="flex gap-2 mt-1 flex-wrap">{allTags.map(tag => (<button key={tag} onClick={() => toggleTag(tag)} className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${(form?.tags??[]).includes(tag) ? tagColors[tag]??'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>{tag}</button>))}</div></div>
-            <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button><Button onClick={handleSave}>{editing ? 'Salvar' : 'Criar'}</Button></div>
+            {!onboardingMode && <div><Label>Etiquetas</Label><div className="flex gap-2 mt-1 flex-wrap">{allTags.map(tag => (<button key={tag} onClick={() => toggleTag(tag)} className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${(form?.tags??[]).includes(tag) ? tagColors[tag]??'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>{tag}</button>))}</div></div>}
+            <div className="flex justify-end gap-2">{!onboardingMode && <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>}<Button onClick={handleSave}>{onboardingMode ? 'Cadastrar' : editing ? 'Salvar' : 'Criar'}</Button></div>
           </div>
         </DialogContent>
       </Dialog>

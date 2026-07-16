@@ -34,6 +34,7 @@ pids
 
 # Database & backups
 *.sql
+!prisma/migrations/**/*.sql
 *.sql.gz
 *.tar.gz
 

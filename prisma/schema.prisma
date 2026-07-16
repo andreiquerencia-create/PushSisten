@@ -113,6 +113,7 @@ model User {
   company       Company?  @relation(fields: [companyId], references: [id])
   sales         Sale[]
   seller        Seller?
+  onboarding    OnboardingProgress?
 
   @@index([companyId])
   @@map("users")
@@ -1438,4 +1439,45 @@ model BillingAuditLog {
   @@index([event])
   @@index([createdAt])
   @@map("billing_audit_logs")
+}
+
+// ============================================================
+// ONBOARDING — Módulo "Coloque sua Loja para Funcionar"
+// Tabela ADITIVA: rastreia progresso do onboarding por usuário.
+// Relacionamento 1:1 com User. Preparada para múltiplas versões.
+// ============================================================
+model OnboardingProgress {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  currentStep   String    @default("welcome") // welcome | profile | product | customer | sale | dashboard | next_steps | completed
+  completed     Boolean   @default(false)
+  abandoned     Boolean   @default(false)
+  abandonedAt   DateTime?
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  timeSpent     Int       @default(0) // segundos totais gastos no onboarding
+  lastAccessAt  DateTime  @default(now())
+  version       String    @default("v1") // permite múltiplas versões futuras
+
+  // Dados coletados na etapa 1 (perfil da loja)
+  storeName     String?
+  storeType     String?   // moda_feminina | moda_masculina | moda_infantil | fitness | plus_size | boutique | multimarcas | outro
+  currentControl String?  // caderno | excel | outro_sistema | nao_controlo
+
+  // Rastreamento de eventos (quais etapas foram concluídas)
+  profileCompleted  Boolean @default(false)
+  productCreated    Boolean @default(false)
+  customerCreated   Boolean @default(false)
+  saleCompleted     Boolean @default(false)
+  dashboardViewed   Boolean @default(false)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([completed])
+  @@index([version])
+  @@map("onboarding_progress")
 }
