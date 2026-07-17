@@ -210,7 +210,7 @@ export function HojeContent() {
           emoji="✨"
           title="Agora sua loja começou a ganhar vida."
           autoClose={3000}
-          onAction={() => setShowDashboardCelebration(false)}
+          onAction={() => { setShowDashboardCelebration(false); navRouter.replace('/hoje'); }}
         />
       )}
 
