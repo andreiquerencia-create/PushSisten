@@ -104,7 +104,7 @@ export function HojeContent() {
   const searchParams = useSearchParams();
   const navRouter = useNavRouter();
   const onboardingMode = searchParams.get('onboarding') === 'true';
-  const { markDashboardViewed, progress } = useOnboardingContext();
+  const { markDashboardViewed, complete, progress } = useOnboardingContext();
   const [showDashboardCelebration, setShowDashboardCelebration] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -140,14 +140,19 @@ export function HojeContent() {
     }
   }, []);
 
-  /* ONBOARDING: ao chegar no dashboard via onboarding=true, marcar como visto e mostrar celebração */
+  /* ONBOARDING: ao chegar no dashboard via onboarding=true, marcar como visto, mostrar celebração e finalizar */
   useEffect(() => {
     if (onboardingMode && progress?.currentStep === 'dashboard' && !progress?.dashboardViewed) {
-      markDashboardViewed();
+      markDashboardViewed().then(() => complete());
+      setShowDashboardCelebration(true);
+    }
+    // Fallback: se o step já é next_steps mas completed ainda é false, finalizar
+    if (onboardingMode && progress?.currentStep === 'next_steps' && !progress?.completed) {
+      complete();
       setShowDashboardCelebration(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onboardingMode, progress?.currentStep, progress?.dashboardViewed]);
+  }, [onboardingMode, progress?.currentStep, progress?.dashboardViewed, progress?.completed]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 

@@ -83,7 +83,7 @@ export function OnboardingContent() {
     return null;
   }
   if (progress?.currentStep === 'dashboard' || progress?.currentStep === 'next_steps') {
-    router.push('/dashboard');
+    router.push('/hoje?onboarding=true');
     return null;
   }
 
