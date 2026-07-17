@@ -126,8 +126,10 @@ export default withAuth(
     }
 
     // ─── ONBOARDING CHECK ───
-    // Non-master users: check if onboarding is needed (skip if already on /onboarding)
-    if (!token.isMaster && token.role !== 'vendedor' && !pathname.startsWith('/onboarding')) {
+    // Non-master users: check if onboarding is needed
+    // Skip if already on /onboarding OR if route has ?onboarding=true (part of active onboarding flow)
+    const isOnboardingFlow = pathname.startsWith('/onboarding') || req.nextUrl.searchParams.get('onboarding') === 'true';
+    if (!token.isMaster && token.role !== 'vendedor' && !isOnboardingFlow) {
       try {
         const onboardingUrl = new URL('/api/onboarding-check', req.url);
         onboardingUrl.searchParams.set('userId', token.id as string);
