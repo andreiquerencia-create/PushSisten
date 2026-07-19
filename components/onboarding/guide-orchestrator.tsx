@@ -124,17 +124,27 @@ export function GuideOrchestrator() {
 
   // ─── ETAPA 4: Cliente ───
   if (stepKey === 'customer' && pathname.startsWith('/clientes')) {
+    const clientFormOpen = typeof document !== 'undefined' && !!document.querySelector('[role="dialog"], [class*="DialogContent"]');
+
+    if (clientFormOpen) {
+      return <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />;
+    }
+
     return (
       <>
+        <Spotlight target='[data-onboarding="new-customer"]' active={true} />
         <OnboardingTooltip
-          target='button, [data-onboarding="new-customer"]'
+          target='[data-onboarding="new-customer"]'
           message="Você pode cadastrar clientes agora ou durante as vendas. Se quiser, pode pular."
-          position="bottom"
+          position="left"
           actionLabel="Cadastrar cliente"
-          onAction={() => setSubStep(1)}
+          onAction={() => {
+            const btn = document.querySelector('[data-onboarding="new-customer"]') as HTMLElement;
+            if (btn) btn.click();
+          }}
           showSkip={true}
           onSkip={handleSkip}
-          active={subStep === 0}
+          active={true}
         />
         <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
       </>

@@ -98,7 +98,7 @@ export function ClientesContent() {
               <TabsTrigger value="abc"><Crown className="w-4 h-4 mr-1.5" />Curva ABC</TabsTrigger>
               <TabsTrigger value="frequencia"><Clock className="w-4 h-4 mr-1.5" />Frequência</TabsTrigger>
             </TabsList>
-            {tab === 'lista' && <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" />Novo Cliente</Button>}
+            {tab === 'lista' && <Button onClick={openNew} data-onboarding="new-customer"><Plus className="w-4 h-4 mr-2" />Novo Cliente</Button>}
           </div>
 
           {/* LIST TAB */}
