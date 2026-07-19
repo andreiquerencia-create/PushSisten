@@ -77,20 +77,9 @@ export function GuideOrchestrator() {
 
   // ─── ETAPA 2: Categorias ───
   if (stepKey === 'categories' && pathname.startsWith('/categorias')) {
+    // Não usar spotlight aqui — apenas mostrar o step card com "Tá bom assim"
     return (
-      <>
-        <OnboardingTooltip
-          target='button, [class*="card"]'
-          message="Criamos categorias com base no que você vende. Pode editar, criar mais ou seguir em frente."
-          position="bottom"
-          actionLabel="Tá bom assim"
-          onAction={handleAdvance}
-          showSkip={true}
-          onSkip={handleSkip}
-          active={true}
-        />
-        <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
-      </>
+      <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
     );
   }
 
@@ -155,10 +144,11 @@ export function GuideOrchestrator() {
   if (stepKey === 'cash_register' && pathname.startsWith('/caixas')) {
     return (
       <>
+        <Spotlight target='[data-onboarding="open-cash"]' active={true} />
         <OnboardingTooltip
-          target='button, [data-onboarding="open-cash"]'
+          target='[data-onboarding="open-cash"]'
           message="O caixa precisa estar aberto para registrar vendas. É como abrir a gaveta de manhã."
-          position="bottom"
+          position="left"
           actionLabel="Já abri o caixa"
           onAction={handleAdvance}
           showSkip={true}

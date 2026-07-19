@@ -774,7 +774,7 @@ export function CaixasContent() {
                         <p className="text-xs text-muted-foreground">Abra um caixa para iniciar as operações do dia</p>
                       </div>
                     </div>
-                    <Button size="sm" onClick={() => { setOpeningForm({ cashAccountId: activeAccounts[0]?.id ?? '', openingBalance: '0', notes: '' }); setOpenCashDialog(true); }}>
+                    <Button size="sm" data-onboarding="open-cash" onClick={() => { setOpeningForm({ cashAccountId: activeAccounts[0]?.id ?? '', openingBalance: '0', notes: '' }); setOpenCashDialog(true); }}>
                       <UnlockKeyhole className="w-4 h-4 mr-1.5" />Abrir Caixa
                     </Button>
                   </div>
