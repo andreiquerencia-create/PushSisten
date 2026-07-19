@@ -64,26 +64,6 @@ export function SignupForm() {
       if (result?.error) {
         toast.error(result.error);
       } else {
-        // Após signup + auto-login, verificar onboarding
-        try {
-          const { getSession } = await import('next-auth/react');
-          const session = await getSession();
-          const userId = (session?.user as any)?.id;
-          if (userId) {
-            const onbRes = await fetch(`/api/onboarding-check?userId=${userId}`, {
-              headers: { 'x-middleware-check': '1' },
-            });
-            if (onbRes.ok) {
-              const onbData = await onbRes.json();
-              if (onbData.needsOnboarding) {
-                router.replace('/onboarding');
-                return;
-              }
-            }
-          }
-        } catch {
-          // Fail-open
-        }
         router.replace('/hoje');
       }
     } catch (error: any) {

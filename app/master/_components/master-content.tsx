@@ -901,7 +901,7 @@ export function MasterContent() {
 
           {/* ═══════ TAB: INTEGRAÇÃO CHECKLIST ═══════ */}
           <TabsContent value="checklist" className="space-y-3">
-            <p className="text-sm text-muted-foreground">Verificação de configuração de cada empresa — acompanhe o onboarding dos seus lojistas.</p>
+            <p className="text-sm text-muted-foreground">Verificação de configuração de cada empresa — acompanhe a ativação dos seus lojistas.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {(analytics.checklists || []).map((cl: any) => (
                 <Card key={cl.id} className="card-premium">

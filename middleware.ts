@@ -75,7 +75,6 @@ const SUBSCRIPTION_EXEMPT = [
   '/master',
   '/login',
   '/signup',
-  '/onboarding',
 ];
 
 export default withAuth(
@@ -105,8 +104,6 @@ export default withAuth(
     if (!token.isMaster) {
       const isExempt = SUBSCRIPTION_EXEMPT.some(route => pathname.startsWith(route));
       if (!isExempt && token.companyId) {
-        // Check subscription status via a lightweight API or edge-compatible logic
-        // We pass company info via headers to be checked by a lightweight endpoint
         try {
           const checkUrl = new URL('/api/subscription-check', req.url);
           checkUrl.searchParams.set('companyId', token.companyId as string);
@@ -122,38 +119,6 @@ export default withAuth(
         } catch {
           // If check fails, allow access (fail-open)
         }
-      }
-    }
-
-    // ─── ONBOARDING CHECK ───
-    // Non-master users: check if onboarding is needed
-    const isOnboardingRoute = pathname.startsWith('/onboarding');
-    const isOnboardingFlow = req.nextUrl.searchParams.get('onboarding') === 'true';
-
-    if (!token.isMaster && token.role !== 'vendedor') {
-      try {
-        const onboardingUrl = new URL('/api/onboarding-check', req.url);
-        onboardingUrl.searchParams.set('userId', token.id as string);
-        console.log('[MIDDLEWARE-DEBUG] Checking onboarding for userId:', token.id, 'pathname:', pathname);
-        const onbRes = await fetch(onboardingUrl.toString(), {
-          headers: { 'x-middleware-check': '1' },
-        });
-        if (onbRes.ok) {
-          const onbData = await onbRes.json();
-          console.log('[MIDDLEWARE-DEBUG] onboarding-check result:', JSON.stringify(onbData), 'isOnboardingRoute:', isOnboardingRoute, 'isOnboardingFlow:', isOnboardingFlow, 'generatedAt:', onbData.generatedAt, 'random:', onbData.random);
-          if (onbData.needsOnboarding && !isOnboardingRoute && !isOnboardingFlow) {
-            console.log('[MIDDLEWARE-DEBUG] REDIRECT → /onboarding (needs onboarding)');
-            return NextResponse.redirect(new URL('/onboarding', req.url));
-          }
-          if (!onbData.needsOnboarding && isOnboardingRoute) {
-            console.log('[MIDDLEWARE-DEBUG] REDIRECT → /hoje (onboarding completed, user on /onboarding)');
-            return NextResponse.redirect(new URL('/hoje', req.url));
-          }
-        } else {
-          console.error('[MIDDLEWARE-DEBUG] onboarding-check failed:', onbRes.status);
-        }
-      } catch (err: any) {
-        console.error('[MIDDLEWARE-DEBUG] onboarding-check exception:', err?.message);
       }
     }
 
@@ -234,6 +199,5 @@ export const config = {
     '/auditoria/:path*',
     '/sem-classificacao/:path*',
     '/relatorios-inteligentes/:path*',
-    '/onboarding/:path*',
   ],
 };

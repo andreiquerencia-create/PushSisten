@@ -17,10 +17,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
-import { OnboardingResumeCard } from '@/components/onboarding-resume-card';
-import { OnboardingCelebration } from '@/components/onboarding-celebration';
-import { useSearchParams, useRouter as useNavRouter } from 'next/navigation';
-import { useOnboardingContext } from '@/components/onboarding-provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -101,12 +97,6 @@ function TrendIndicator({ delta }: { delta: number | null | undefined }) {
 }
 
 export function HojeContent() {
-  const searchParams = useSearchParams();
-  const navRouter = useNavRouter();
-  const onboardingMode = searchParams.get('onboarding') === 'true';
-  const { markDashboardViewed, complete, progress } = useOnboardingContext();
-  const [showDashboardCelebration, setShowDashboardCelebration] = useState(false);
-
   const [loading, setLoading] = useState(true);
   const [pushScore, setPushScore] = useState<PushScoreData | null>(null);
   const [resumo, setResumo] = useState<ResumoData | null>(null);
@@ -139,20 +129,6 @@ export function HojeContent() {
       setLoading(false);
     }
   }, []);
-
-  /* ONBOARDING: ao chegar no dashboard via onboarding=true, marcar como visto, mostrar celebração e finalizar */
-  useEffect(() => {
-    if (onboardingMode && progress?.currentStep === 'dashboard' && !progress?.dashboardViewed) {
-      markDashboardViewed().then(() => complete());
-      setShowDashboardCelebration(true);
-    }
-    // Fallback: se o step já é next_steps mas completed ainda é false, finalizar
-    if (onboardingMode && progress?.currentStep === 'next_steps' && !progress?.completed) {
-      complete();
-      setShowDashboardCelebration(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onboardingMode, progress?.currentStep, progress?.dashboardViewed, progress?.completed]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -205,20 +181,8 @@ export function HojeContent() {
 
   return (
     <div>
-      {showDashboardCelebration && (
-        <OnboardingCelebration
-          emoji="✨"
-          title="Agora sua loja começou a ganhar vida."
-          autoClose={3000}
-          onAction={() => { setShowDashboardCelebration(false); navRouter.replace('/hoje'); }}
-        />
-      )}
-
       <AppHeader title="Central do Dia" />
       <div className="p-4 lg:p-6 space-y-6">
-
-        {/* ONBOARDING: card discreto de retomada quando abandonado */}
-        <OnboardingResumeCard />
 
         {/* ══════ BLOCO 1 — PUSH SCORE (termômetro do dia) ══════ */}
         <Link href="/push-score" className="block group">

@@ -1,10 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useRouter as useNavRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useOnboardingContext } from '@/components/onboarding-provider';
-import { OnboardingCelebration } from '@/components/onboarding-celebration';
 import { AppHeader } from '@/components/app-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,11 +19,6 @@ const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'EG', 'EGG'];
 const DEFAULT_COLORS = ['Preto', 'Branco', 'Azul', 'Vermelho', 'Rosa', 'Verde', 'Amarelo', 'Cinza', 'Marrom', 'Bege'];
 
 export function ProdutosContent() {
-  const searchParams = useSearchParams();
-  const navRouter = useNavRouter();
-  const onboardingMode = searchParams.get('onboarding') === 'true';
-  const { markProductCreated } = useOnboardingContext();
-  const [showCelebration, setShowCelebration] = useState(false);
 
   const { data: session } = useSession() || {};
   const userRole = (session?.user as any)?.role;
@@ -38,7 +30,7 @@ export function ProdutosContent() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [dialogOpen, setDialogOpen] = useState(onboardingMode);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<any>({ name: '', sku: '', barcode: '', description: '', costPrice: '', salePrice: '', stockQuantity: '', minStock: '5', categoryId: '', imageUrl: '' });
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
@@ -85,16 +77,10 @@ export function ProdutosContent() {
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       if (res.ok) {
         const created = await res.json();
-        if (onboardingMode && !editing) {
-          setDialogOpen(false);
-          await markProductCreated();
-          setShowCelebration(true);
-        } else {
-          const skuMsg = !editing && !form?.sku?.trim() && created?.sku ? ` (SKU: ${created.sku})` : '';
-          toast.success(`${editing ? 'Produto atualizado' : 'Produto criado'}!${skuMsg}`);
-          setDialogOpen(false);
-          fetchProducts();
-        }
+        const skuMsg = !editing && !form?.sku?.trim() && created?.sku ? ` (SKU: ${created.sku})` : '';
+        toast.success(`${editing ? 'Produto atualizado' : 'Produto criado'}!${skuMsg}`);
+        setDialogOpen(false);
+        fetchProducts();
       } else {
         const d = await res.json();
         toast.error(d?.error ?? 'Erro ao salvar');
@@ -391,28 +377,18 @@ export function ProdutosContent() {
       </div>
 
       {/* Product Dialog */}
-      {showCelebration && (
-        <OnboardingCelebration
-          emoji="📦"
-          title="Excelente."
-          subtitle="Seu primeiro produto foi cadastrado."
-          autoClose={2000}
-          onAction={() => navRouter.push('/clientes?onboarding=true')}
-        />
-      )}
 
-      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!onboardingMode || open) setDialogOpen(open); }}>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="font-display">{onboardingMode ? 'Cadastre seu primeiro produto' : editing ? 'Editar Produto' : 'Novo Produto'}</DialogTitle></DialogHeader>
-          {onboardingMode && <p className="text-sm text-muted-foreground mb-2">Apenas o essencial. Você pode completar depois.</p>}
+          <DialogHeader><DialogTitle className="font-display">{editing ? 'Editar Produto' : 'Novo Produto'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2"><Label>Nome *</Label><Input value={form?.name??''} onChange={(e: any) => setForm({...(form??{}), name: e?.target?.value??''})} autoFocus /></div>
-              {!onboardingMode && <div><Label>SKU</Label><Input value={form?.sku??''} onChange={(e: any) => setForm({...(form??{}), sku: e?.target?.value??''})} placeholder={editing ? '' : 'Gerado automaticamente'} disabled={!isAdmin} className={!isAdmin ? 'bg-muted' : ''} /></div>}
-              {!onboardingMode && <div><Label>Código de Barras</Label><Input value={form?.barcode??''} onChange={(e: any) => setForm({...(form??{}), barcode: e?.target?.value??''})} /></div>}
-              {!onboardingMode && <div><Label>Preço de Custo</Label><CurrencyInput value={parseFloat(form?.costPrice) || 0} onChange={(v: number) => setForm({...(form??{}), costPrice: String(v)})} /></div>}
+              <div><Label>SKU</Label><Input value={form?.sku??''} onChange={(e: any) => setForm({...(form??{}), sku: e?.target?.value??''})} placeholder={editing ? '' : 'Gerado automaticamente'} disabled={!isAdmin} className={!isAdmin ? 'bg-muted' : ''} /></div>
+              <div><Label>Código de Barras</Label><Input value={form?.barcode??''} onChange={(e: any) => setForm({...(form??{}), barcode: e?.target?.value??''})} /></div>
+              <div><Label>Preço de Custo</Label><CurrencyInput value={parseFloat(form?.costPrice) || 0} onChange={(v: number) => setForm({...(form??{}), costPrice: String(v)})} /></div>
               <div><Label>Preço de Venda</Label><CurrencyInput value={parseFloat(form?.salePrice) || 0} onChange={(v: number) => setForm({...(form??{}), salePrice: String(v)})} /></div>
-              {!onboardingMode && <div><Label>Margem</Label><Input value={`${margin}%`} disabled className="bg-muted" /></div>}
+              <div><Label>Margem</Label><Input value={`${margin}%`} disabled className="bg-muted" /></div>
               <div><Label>Categoria</Label>
                 <select className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm" value={form?.categoryId??''} onChange={(e: any) => setForm({...(form??{}), categoryId: e?.target?.value??''})}>
                   <option value="">Sem categoria</option>
@@ -420,8 +396,8 @@ export function ProdutosContent() {
                 </select>
               </div>
               {!editing && <div><Label>Estoque Inicial</Label><Input type="number" value={form?.stockQuantity??''} onChange={(e: any) => setForm({...(form??{}), stockQuantity: e?.target?.value??''})} /></div>}
-              {!onboardingMode && <div><Label>Estoque Mínimo</Label><Input type="number" value={form?.minStock??''} onChange={(e: any) => setForm({...(form??{}), minStock: e?.target?.value??''})} /></div>}
-              {!onboardingMode && <div className="col-span-2"><Label>Descrição</Label><Input value={form?.description??''} onChange={(e: any) => setForm({...(form??{}), description: e?.target?.value??''})} /></div>}
+              <div><Label>Estoque Mínimo</Label><Input type="number" value={form?.minStock??''} onChange={(e: any) => setForm({...(form??{}), minStock: e?.target?.value??''})} /></div>
+              <div className="col-span-2"><Label>Descrição</Label><Input value={form?.description??''} onChange={(e: any) => setForm({...(form??{}), description: e?.target?.value??''})} /></div>
             </div>
             {/* Price Tables section - only when editing and admin */}
             {editing && isAdmin && (
@@ -462,8 +438,8 @@ export function ProdutosContent() {
             )}
 
             <div className="flex justify-end gap-2">
-              {!onboardingMode && <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>}
-              <Button onClick={handleSave}>{onboardingMode ? 'Cadastrar' : editing ? 'Salvar' : 'Criar'}</Button>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSave}>{editing ? 'Salvar' : 'Criar'}</Button>
             </div>
           </div>
         </DialogContent>
