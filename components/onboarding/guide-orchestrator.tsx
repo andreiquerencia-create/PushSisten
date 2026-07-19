@@ -12,6 +12,7 @@ import { ACTIVATION_STEPS } from '@/lib/onboarding/steps';
 /**
  * Orquestrador de guias do onboarding.
  * Renderiza Spotlight + Tooltip sobre as telas reais baseado no step atual.
+ * Usa um ticker para detectar mudanças no DOM (ex: carrinho do PDV).
  */
 export function GuideOrchestrator() {
   const pathname = usePathname();
@@ -19,11 +20,18 @@ export function GuideOrchestrator() {
   const { state, isActive, currentStepConfig, advance, skip } = useOnboardingContext();
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
   const [subStep, setSubStep] = useState(0); // Para etapas com múltiplos highlights (ex: PDV)
+  const [tick, setTick] = useState(0); // Força re-render para detectar mudanças no DOM
 
   // Reset substep when main step changes
   useEffect(() => {
     setSubStep(0);
   }, [state?.currentStep]);
+
+  // Ticker: re-render a cada 1.5s para detectar mudanças no DOM (ex: carrinho PDV)
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 1500);
+    return () => clearInterval(interval);
+  }, []);
 
   if (!isActive || !state || !currentStepConfig) return null;
 
