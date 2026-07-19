@@ -41,8 +41,14 @@ export function OnboardingContent() {
   useEffect(() => {
     if (isLoading) return; // Aguarda carregar
 
+    // Se não existe progress (nunca iniciou ou já completou e foi limpo) → vai para /hoje
+    if (!progress) {
+      router.replace('/hoje');
+      return;
+    }
+
     // Já completou → vai para /hoje
-    if (progress?.completed || progress?.currentStep === 'completed') {
+    if (progress.completed || progress.currentStep === 'completed') {
       router.replace('/hoje');
       return;
     }
