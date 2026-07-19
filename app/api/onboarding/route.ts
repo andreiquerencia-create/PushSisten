@@ -102,11 +102,19 @@ export async function POST(req: NextRequest) {
       }
 
       case 'sale_completed': {
+        const existing = await prisma.onboardingProgress.findUnique({ where: { userId } });
+        const timeSpent = existing?.startedAt
+          ? Math.floor((Date.now() - existing.startedAt.getTime()) / 1000)
+          : 0;
+
         const progress = await prisma.onboardingProgress.update({
           where: { userId },
           data: {
             saleCompleted: true,
-            currentStep: 'dashboard',
+            currentStep: 'completed',
+            completed: true,
+            completedAt: new Date(),
+            timeSpent,
             lastAccessAt: new Date(),
           },
         });

@@ -65,8 +65,8 @@ export function OnboardingContent() {
   };
 
   // Se onboarding já foi completado ou o step é posterior ao profile, redirecionar
-  if (progress?.completed) {
-    router.push('/dashboard');
+  if (progress?.completed || progress?.currentStep === 'completed') {
+    router.push('/hoje');
     return null;
   }
 
@@ -83,7 +83,7 @@ export function OnboardingContent() {
     return null;
   }
   if (progress?.currentStep === 'dashboard' || progress?.currentStep === 'next_steps') {
-    router.push('/hoje?onboarding=true');
+    router.push('/hoje');
     return null;
   }
 

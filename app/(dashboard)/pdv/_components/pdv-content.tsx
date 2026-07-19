@@ -1442,7 +1442,7 @@ export default function PDVContent({ editSaleId }: { editSaleId?: string }) {
           title="Parabéns."
           subtitle="Sua primeira venda foi registrada."
           autoClose={2500}
-          onAction={() => router.push('/dashboard?onboarding=true')}
+          onAction={() => router.push('/hoje')}
         />
       )}
 
