@@ -2,12 +2,13 @@
 
 import { useOnboardingContext } from './provider';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ChevronRight, SkipForward, Sparkles } from 'lucide-react';
 
 export function OnboardingStepCard() {
   const { state, isActive, currentStepConfig, advance, skip, totalSteps } = useOnboardingContext();
   const router = useRouter();
+  const pathname = usePathname();
 
   if (!isActive || !state || !currentStepConfig) return null;
 
@@ -15,11 +16,16 @@ export function OnboardingStepCard() {
   if (currentStepConfig.key === 'welcome' || currentStepConfig.key === 'celebration') return null;
 
   const completedCount = (state.completedSteps as string[]).length;
+  const isOnCorrectRoute = !!(currentStepConfig.route && pathname.startsWith(currentStepConfig.route));
 
   const handleGoToStep = () => {
     if (currentStepConfig.route) {
       router.push(currentStepConfig.route);
     }
+  };
+
+  const handleAdvanceStep = () => {
+    advance();
   };
 
   const handleSkip = () => {
@@ -68,14 +74,25 @@ export function OnboardingStepCard() {
               Pular
             </button>
           )}
-          <Button
-            size="sm"
-            onClick={handleGoToStep}
-            className="ml-auto text-xs h-8 px-4 gap-1.5 rounded-lg"
-          >
-            Ir para etapa
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Button>
+          {isOnCorrectRoute ? (
+            <Button
+              size="sm"
+              onClick={handleAdvanceStep}
+              className="ml-auto text-xs h-8 px-4 gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700"
+            >
+              Concluído, próxima
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              onClick={handleGoToStep}
+              className="ml-auto text-xs h-8 px-4 gap-1.5 rounded-lg"
+            >
+              Ir para etapa
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+          )}
         </div>
 
         {/* Duration hint */}
