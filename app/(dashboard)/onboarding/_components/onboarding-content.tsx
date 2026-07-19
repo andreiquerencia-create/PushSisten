@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboardingContext } from '@/components/onboarding-provider';
 import { Button } from '@/components/ui/button';
@@ -27,17 +27,56 @@ const CONTROL_OPTIONS = [
 
 export function OnboardingContent() {
   const router = useRouter();
-  const { progress, isOnboarding, currentStep, start, updateProfile, abandon } = useOnboardingContext();
+  const { progress, isLoading, isOnboarding, currentStep, start, updateProfile, abandon } = useOnboardingContext();
 
-  const [phase, setPhase] = useState<'welcome' | 'profile' | 'transition'>(
-    progress?.profileCompleted ? 'transition' : progress?.currentStep === 'profile' ? 'profile' : 'welcome'
-  );
+  const [phase, setPhase] = useState<'loading' | 'welcome' | 'profile' | 'transition'>('loading');
 
   // Profile form state
-  const [storeName, setStoreName] = useState(progress?.storeName || '');
-  const [storeType, setStoreType] = useState(progress?.storeType || '');
-  const [currentControl, setCurrentControl] = useState(progress?.currentControl || '');
+  const [storeName, setStoreName] = useState('');
+  const [storeType, setStoreType] = useState('');
+  const [currentControl, setCurrentControl] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // ─── REDIRECT LOGIC (useEffect para evitar router.push durante render) ───
+  useEffect(() => {
+    if (isLoading) return; // Aguarda carregar
+
+    // Já completou → vai para /hoje
+    if (progress?.completed || progress?.currentStep === 'completed') {
+      router.replace('/hoje');
+      return;
+    }
+
+    // Está em etapas posteriores → redirecionar para a tela correta
+    if (progress?.currentStep === 'product') {
+      router.replace('/produtos?onboarding=true');
+      return;
+    }
+    if (progress?.currentStep === 'customer') {
+      router.replace('/clientes?onboarding=true');
+      return;
+    }
+    if (progress?.currentStep === 'sale') {
+      router.replace('/pdv?onboarding=true');
+      return;
+    }
+    if (progress?.currentStep === 'dashboard' || progress?.currentStep === 'next_steps') {
+      router.replace('/hoje');
+      return;
+    }
+
+    // Definir a fase correta com base no progress
+    if (progress?.profileCompleted) {
+      setPhase('transition');
+    } else if (progress?.currentStep === 'profile') {
+      setPhase('profile');
+      setStoreName(progress?.storeName || '');
+      setStoreType(progress?.storeType || '');
+      setCurrentControl(progress?.currentControl || '');
+    } else {
+      setPhase('welcome');
+    }
+  }, [isLoading, progress, router]);
 
   const handleStart = async () => {
     await start();
@@ -46,7 +85,7 @@ export function OnboardingContent() {
 
   const handleSkip = async () => {
     await abandon();
-    router.push('/dashboard');
+    router.push('/hoje');
   };
 
   const handleProfileSubmit = async () => {
@@ -64,27 +103,15 @@ export function OnboardingContent() {
     }
   };
 
-  // Se onboarding já foi completado ou o step é posterior ao profile, redirecionar
-  if (progress?.completed || progress?.currentStep === 'completed') {
-    router.push('/hoje');
-    return null;
-  }
-
-  if (progress?.currentStep === 'product') {
-    router.push('/produtos?onboarding=true');
-    return null;
-  }
-  if (progress?.currentStep === 'customer') {
-    router.push('/clientes?onboarding=true');
-    return null;
-  }
-  if (progress?.currentStep === 'sale') {
-    router.push('/pdv?onboarding=true');
-    return null;
-  }
-  if (progress?.currentStep === 'dashboard' || progress?.currentStep === 'next_steps') {
-    router.push('/hoje');
-    return null;
+  // ───── LOADING ─────
+  if (phase === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="text-center space-y-4 px-6">
+          <div className="animate-pulse text-muted-foreground">Carregando...</div>
+        </div>
+      </div>
+    );
   }
 
   // ───── WELCOME ─────
