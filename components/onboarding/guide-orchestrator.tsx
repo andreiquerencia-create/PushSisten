@@ -162,25 +162,43 @@ export function GuideOrchestrator() {
 
   // ─── ETAPA 6: Primeira Venda (PDV) ───
   if (stepKey === 'first_sale' && pathname.startsWith('/pdv')) {
-    const pdvMessages = [
-      { target: 'input[placeholder*="Buscar produto"], input[placeholder*="produto"]', message: 'Busque o produto que você cadastrou.', position: 'bottom' as const },
-      { target: '[class*="payment"], button:has(svg)', message: 'Clique em "Pagamento" para escolher como o cliente vai pagar.', position: 'left' as const },
-      { target: 'button', message: 'Clique em "Finalizar Venda" para concluir!', position: 'top' as const },
-    ];
+    // Detectar estado real do PDV
+    const hasItemInCart = typeof document !== 'undefined' && (document.body.innerText.includes('item') || document.body.innerText.includes('itens')) && !document.body.innerText.includes('0 itens');
+    const hasPaymentModal = typeof document !== 'undefined' && !!document.querySelector('[role="dialog"]');
 
-    const currentPdvStep = Math.min(subStep, pdvMessages.length - 1);
-    const msg = pdvMessages[currentPdvStep];
+    // Estado 1: Carrinho vazio → buscar produto
+    if (!hasItemInCart && !hasPaymentModal) {
+      return (
+        <>
+          <OnboardingTooltip
+            target='input[placeholder*="Buscar produto"], input[placeholder*="produto"]'
+            message="Busque o produto que você cadastrou."
+            position="bottom"
+            active={true}
+          />
+          <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
+        </>
+      );
+    }
 
+    // Estado 2: Tem item no carrinho → indicar pagamento
+    if (hasItemInCart && !hasPaymentModal) {
+      return (
+        <>
+          <OnboardingTooltip
+            target='button:has(svg)'
+            message="Produto adicionado! Agora clique em Pagamento para escolher como o cliente vai pagar."
+            position="top"
+            active={false}
+          />
+          <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
+        </>
+      );
+    }
+
+    // Estado 3: Modal de pagamento aberto → não interferir
     return (
-      <>
-        <OnboardingTooltip
-          target={msg.target}
-          message={msg.message}
-          position={msg.position}
-          active={true}
-        />
-        <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
-      </>
+      <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
     );
   }
 
