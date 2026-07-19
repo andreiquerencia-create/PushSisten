@@ -2,6 +2,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { OnboardingProgressBar } from '@/components/onboarding/progress-bar';
 import { OnboardingStepCard } from '@/components/onboarding/step-card';
 import { OnboardingReminder } from '@/components/onboarding/reminder';
+import { GuideOrchestrator } from '@/components/onboarding/guide-orchestrator';
 
 export default function DashboardLayout({
   children,
@@ -16,6 +17,7 @@ export default function DashboardLayout({
         {children}
         <OnboardingStepCard />
         <OnboardingReminder />
+        <GuideOrchestrator />
       </main>
     </div>
   );
