@@ -56,34 +56,37 @@ export function OnboardingContent() {
     console.log('[ONBOARDING-DEBUG] phase changed:', phase);
   }, [phase]);
 
-  // ─── REDIRECT LOGIC ───
-  // Se onboarding já foi completado ou o step é posterior ao profile, redirecionar
-  if (progress?.completed || progress?.currentStep === 'completed') {
-    console.log('[ONBOARDING-DEBUG] REDIRECT: completed=true, going to /hoje');
-    router.push('/hoje');
-    return null;
-  }
+  // ─── REDIRECT LOGIC (dentro de useEffect para funcionar no App Router) ───
+  useEffect(() => {
+    if (isLoading) return;
+    if (!progress) return;
 
-  if (progress?.currentStep === 'product') {
-    console.log('[ONBOARDING-DEBUG] REDIRECT: step=product, going to /produtos');
-    router.push('/produtos?onboarding=true');
-    return null;
-  }
-  if (progress?.currentStep === 'customer') {
-    console.log('[ONBOARDING-DEBUG] REDIRECT: step=customer, going to /clientes');
-    router.push('/clientes?onboarding=true');
-    return null;
-  }
-  if (progress?.currentStep === 'sale') {
-    console.log('[ONBOARDING-DEBUG] REDIRECT: step=sale, going to /pdv');
-    router.push('/pdv?onboarding=true');
-    return null;
-  }
-  if (progress?.currentStep === 'dashboard' || progress?.currentStep === 'next_steps') {
-    console.log('[ONBOARDING-DEBUG] REDIRECT: step=dashboard/next_steps, going to /hoje');
-    router.push('/hoje?onboarding=true');
-    return null;
-  }
+    if (progress.completed || progress.currentStep === 'completed') {
+      console.log('[ONBOARDING-DEBUG] REDIRECT via useEffect: completed=true, going to /hoje');
+      window.location.href = '/hoje';
+      return;
+    }
+    if (progress.currentStep === 'product') {
+      console.log('[ONBOARDING-DEBUG] REDIRECT via useEffect: step=product');
+      window.location.href = '/produtos?onboarding=true';
+      return;
+    }
+    if (progress.currentStep === 'customer') {
+      console.log('[ONBOARDING-DEBUG] REDIRECT via useEffect: step=customer');
+      window.location.href = '/clientes?onboarding=true';
+      return;
+    }
+    if (progress.currentStep === 'sale') {
+      console.log('[ONBOARDING-DEBUG] REDIRECT via useEffect: step=sale');
+      window.location.href = '/pdv?onboarding=true';
+      return;
+    }
+    if (progress.currentStep === 'dashboard' || progress.currentStep === 'next_steps') {
+      console.log('[ONBOARDING-DEBUG] REDIRECT via useEffect: step=dashboard/next_steps');
+      window.location.href = '/hoje';
+      return;
+    }
+  }, [isLoading, progress]);
 
   const handleStart = async () => {
     console.log('[ONBOARDING-DEBUG] handleStart called');
