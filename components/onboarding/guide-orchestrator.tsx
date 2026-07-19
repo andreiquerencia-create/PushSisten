@@ -96,13 +96,17 @@ export function GuideOrchestrator() {
 
   // ─── ETAPA 3: Primeiro Produto ───
   if (stepKey === 'product' && pathname.startsWith('/produtos')) {
-    if (subStep === 0) {
+    // Detectar se o formulário de produto está aberto
+    const formOpen = typeof document !== 'undefined' && !!document.querySelector('[role="dialog"], [class*="DialogContent"], form');
+
+    if (!formOpen && subStep === 0) {
+      // Form fechado: mostrar spotlight no botão "Novo Produto"
       return (
         <>
           <Spotlight target='[data-onboarding="new-product"]' active={true} />
           <OnboardingTooltip
             target='[data-onboarding="new-product"]'
-            message='Clique em "Novo Produto" para cadastrar seu primeiro produto. Só precisa de nome e preço.'
+            message='Clique em "Novo Produto" para cadastrar seu primeiro produto.'
             position="left"
             showSkip={false}
             active={true}
@@ -111,6 +115,8 @@ export function GuideOrchestrator() {
         </>
       );
     }
+
+    // Form aberto: não mostrar nada (deixar o usuário preencher sem interferência)
     return (
       <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
     );
