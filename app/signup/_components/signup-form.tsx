@@ -64,7 +64,7 @@ export function SignupForm() {
       if (result?.error) {
         toast.error(result.error);
       } else {
-        router.replace('/hoje');
+        router.replace('/setup');
       }
     } catch (error: any) {
       toast.error('Erro ao criar conta');
