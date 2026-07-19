@@ -170,14 +170,19 @@ export function GuideOrchestrator() {
 
   // ─── ETAPA 6: Primeira Venda (PDV) ───
   if (stepKey === 'first_sale' && pathname.startsWith('/pdv')) {
-    // Detectar estado real do PDV
-    const hasItemInCart = typeof document !== 'undefined' && (document.body.innerText.includes('item') || document.body.innerText.includes('itens')) && !document.body.innerText.includes('0 itens');
-    const hasPaymentModal = typeof document !== 'undefined' && !!document.querySelector('[role="dialog"]');
+    // Detectar estado real do PDV via DOM
+    const cartText = typeof document !== 'undefined' ? document.body.innerText : '';
+    const hasItemInCart = (cartText.includes('1 item') || cartText.includes('2 ite') || cartText.includes('3 ite') || cartText.includes('itens')) && !cartText.includes('0 itens');
+    const hasPaymentModal = typeof document !== 'undefined' && !!document.querySelector('[role="dialog"], [class*="DialogContent"]');
+    // Detectar se o campo de cliente tem valor selecionado
+    const clienteInput = typeof document !== 'undefined' ? document.querySelector('input[placeholder*="cliente"], input[placeholder*="Buscar clie"]') as HTMLInputElement : null;
+    const hasClientSelected = clienteInput ? clienteInput.value.length > 0 : false;
 
     // Estado 1: Carrinho vazio → buscar produto
     if (!hasItemInCart && !hasPaymentModal) {
       return (
         <>
+          <Spotlight target='input[placeholder*="Buscar produto"], input[placeholder*="produto"]' active={true} />
           <OnboardingTooltip
             target='input[placeholder*="Buscar produto"], input[placeholder*="produto"]'
             message="Busque o produto que você cadastrou."
@@ -189,13 +194,31 @@ export function GuideOrchestrator() {
       );
     }
 
-    // Estado 2: Tem item no carrinho → indicar pagamento
-    if (hasItemInCart && !hasPaymentModal) {
+    // Estado 2: Produto no carrinho, cliente não selecionado → selecionar cliente
+    if (hasItemInCart && !hasClientSelected && !hasPaymentModal) {
+      return (
+        <>
+          <Spotlight target='input[placeholder*="cliente"], input[placeholder*="Buscar clie"]' active={true} />
+          <OnboardingTooltip
+            target='input[placeholder*="cliente"], input[placeholder*="Buscar clie"]'
+            message="Agora selecione um cliente. Pode buscar pelo nome ou pular esta etapa."
+            position="left"
+            actionLabel="Pular cliente"
+            onAction={() => setSubStep(3)}
+            active={true}
+          />
+          <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
+        </>
+      );
+    }
+
+    // Estado 3: Cliente selecionado (ou pulou) → clicar pagamento
+    if (hasItemInCart && (hasClientSelected || subStep === 3) && !hasPaymentModal) {
       return (
         <>
           <OnboardingTooltip
-            target='button:has(svg)'
-            message="Produto adicionado! Agora clique em Pagamento para escolher como o cliente vai pagar."
+            target='button'
+            message="Agora clique em Pagamento para escolher como o cliente vai pagar."
             position="top"
             active={false}
           />
@@ -204,7 +227,7 @@ export function GuideOrchestrator() {
       );
     }
 
-    // Estado 3: Modal de pagamento aberto → não interferir
+    // Estado 4: Modal de pagamento aberto → não interferir
     return (
       <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
     );
