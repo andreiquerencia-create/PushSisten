@@ -1,46 +1,52 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useOnboardingContext } from './provider';
 import { Spotlight } from './spotlight';
 import { OnboardingTooltip } from './tooltip';
 import { ToastAchievement } from './toast-achievement';
 import { OnboardingCelebration } from './celebration';
-import { ACTIVATION_STEPS } from '@/lib/onboarding/steps';
 
 /**
  * Orquestrador de guias do onboarding.
  * Renderiza Spotlight + Tooltip sobre as telas reais baseado no step atual.
- * Usa um ticker para detectar mudanças no DOM (ex: carrinho do PDV).
  */
 export function GuideOrchestrator() {
   const pathname = usePathname();
-  const router = useRouter();
   const { state, isActive, currentStepConfig, advance, skip } = useOnboardingContext();
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
-  const [subStep, setSubStep] = useState(0); // Para etapas com múltiplos highlights (ex: PDV)
-  const [tick, setTick] = useState(0); // Força re-render para detectar mudanças no DOM
+  const [pdvStep, setPdvStep] = useState(0); // 0=produto, 1=cliente, 2=pagamento
 
-  // Reset substep when main step changes
+  // Reset PDV step when main step changes
   useEffect(() => {
-    setSubStep(0);
+    setPdvStep(0);
   }, [state?.currentStep]);
 
-  // Ticker: re-render a cada 1.5s para detectar mudanças no DOM (ex: carrinho PDV)
+  // Detectar mudanças no carrinho do PDV
   useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 1500);
+    if (!isActive || currentStepConfig?.key !== 'first_sale' || !pathname.startsWith('/pdv')) return;
+
+    const checkCart = () => {
+      const text = document.body.innerText;
+      const hasItem = text.includes('1 item') || text.includes('2 ite') || text.includes('3 ite') || (text.includes('itens') && !text.includes('0 itens'));
+      if (hasItem && pdvStep === 0) {
+        setPdvStep(1); // Avançar para selecionar cliente
+      }
+    };
+
+    const interval = setInterval(checkCart, 1500);
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive, currentStepConfig?.key, pathname, pdvStep]);
 
   if (!isActive || !state || !currentStepConfig) return null;
 
-  // Show celebration
+  // Celebração
   if (currentStepConfig.key === 'celebration') {
     return <OnboardingCelebration />;
   }
 
-  // Don't show guides on setup screen
+  // Setup screen — sem guias
   if (currentStepConfig.key === 'welcome') return null;
 
   const showToast = (message: string) => {
@@ -57,19 +63,14 @@ export function GuideOrchestrator() {
     await skip();
   };
 
-  // ─── STEP GUIDES ───
-  // Each step defines what to show based on the current pathname
-
   const stepKey = currentStepConfig.key;
-  const isOnCorrectRoute = currentStepConfig.route && pathname.startsWith(currentStepConfig.route);
 
   // ─── ETAPA 1: Dados da Empresa ───
   if (stepKey === 'company' && pathname.startsWith('/configuracoes')) {
     return (
       <>
-        <Spotlight target='input[id="company-name"], input[name="name"], #company-name-input, input[placeholder*="nome"]' active={true} />
         <OnboardingTooltip
-          target='input[id="company-name"], input[name="name"], #company-name-input, input[placeholder*="nome"]'
+          target='input[id="company-name"], input[name="name"], input[placeholder*="nome"]'
           message="Esse nome aparece nos comprovantes dos seus clientes. Preencha e salve."
           position="right"
           actionLabel="Já salvei"
@@ -85,7 +86,6 @@ export function GuideOrchestrator() {
 
   // ─── ETAPA 2: Categorias ───
   if (stepKey === 'categories' && pathname.startsWith('/categorias')) {
-    // Não usar spotlight aqui — apenas mostrar o step card com "Tá bom assim"
     return (
       <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
     );
@@ -93,11 +93,9 @@ export function GuideOrchestrator() {
 
   // ─── ETAPA 3: Primeiro Produto ───
   if (stepKey === 'product' && pathname.startsWith('/produtos')) {
-    // Detectar se o formulário de produto está aberto
-    const formOpen = typeof document !== 'undefined' && !!document.querySelector('[role="dialog"], [class*="DialogContent"], form');
+    const formOpen = typeof document !== 'undefined' && !!document.querySelector('[role="dialog"], [class*="DialogContent"]');
 
-    if (!formOpen && subStep === 0) {
-      // Form fechado: mostrar spotlight no botão "Novo Produto"
+    if (!formOpen) {
       return (
         <>
           <Spotlight target='[data-onboarding="new-product"]' active={true} />
@@ -113,39 +111,36 @@ export function GuideOrchestrator() {
       );
     }
 
-    // Form aberto: não mostrar nada (deixar o usuário preencher sem interferência)
-    return (
-      <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
-    );
+    return <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />;
   }
 
   // ─── ETAPA 4: Cliente ───
   if (stepKey === 'customer' && pathname.startsWith('/clientes')) {
-    const clientFormOpen = typeof document !== 'undefined' && !!document.querySelector('[role="dialog"], [class*="DialogContent"]');
+    const formOpen = typeof document !== 'undefined' && !!document.querySelector('[role="dialog"], [class*="DialogContent"]');
 
-    if (clientFormOpen) {
-      return <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />;
+    if (!formOpen) {
+      return (
+        <>
+          <Spotlight target='[data-onboarding="new-customer"]' active={true} />
+          <OnboardingTooltip
+            target='[data-onboarding="new-customer"]'
+            message="Cadastre um cliente ou pule para o próximo passo."
+            position="left"
+            actionLabel="Cadastrar"
+            onAction={() => {
+              const btn = document.querySelector('[data-onboarding="new-customer"]') as HTMLElement;
+              if (btn) btn.click();
+            }}
+            showSkip={true}
+            onSkip={handleSkip}
+            active={true}
+          />
+          <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
+        </>
+      );
     }
 
-    return (
-      <>
-        <Spotlight target='[data-onboarding="new-customer"]' active={true} />
-        <OnboardingTooltip
-          target='[data-onboarding="new-customer"]'
-          message="Você pode cadastrar clientes agora ou durante as vendas. Se quiser, pode pular."
-          position="left"
-          actionLabel="Cadastrar cliente"
-          onAction={() => {
-            const btn = document.querySelector('[data-onboarding="new-customer"]') as HTMLElement;
-            if (btn) btn.click();
-          }}
-          showSkip={true}
-          onSkip={handleSkip}
-          active={true}
-        />
-        <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
-      </>
-    );
+    return <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />;
   }
 
   // ─── ETAPA 5: Caixa ───
@@ -155,9 +150,9 @@ export function GuideOrchestrator() {
         <Spotlight target='[data-onboarding="open-cash"]' active={true} />
         <OnboardingTooltip
           target='[data-onboarding="open-cash"]'
-          message="O caixa precisa estar aberto para registrar vendas. É como abrir a gaveta de manhã."
+          message="Abra o caixa para começar a vender."
           position="left"
-          actionLabel="Já abri o caixa"
+          actionLabel="Já abri"
           onAction={handleAdvance}
           showSkip={true}
           onSkip={handleSkip}
@@ -170,28 +165,20 @@ export function GuideOrchestrator() {
 
   // ─── ETAPA 6: Primeira Venda (PDV) ───
   if (stepKey === 'first_sale' && pathname.startsWith('/pdv')) {
-    // Detectar estado real do PDV via DOM
-    const cartText = typeof document !== 'undefined' ? document.body.innerText : '';
-    const hasItemInCart = cartText.includes('1 item') || cartText.includes('2 ite') || cartText.includes('3 ite') || (cartText.includes('itens') && !cartText.includes('0 itens'));
     const hasPaymentModal = typeof document !== 'undefined' && !!document.querySelector('[role="dialog"], [class*="DialogContent"]');
-    // Detectar se algum input está focado (dropdown aberto)
-    const activeEl = typeof document !== 'undefined' ? document.activeElement : null;
-    const isInputFocused = activeEl?.tagName === 'INPUT';
-    // Detectar cliente: se o subtotal > 0 e subStep >= 2, considerar que pode ir pro pagamento
-    const hasTotal = cartText.includes('R$') && !cartText.includes('R$ 0,00\nTotal\nR$ 0,00');
 
-    // Se qualquer input está focado (buscando produto ou cliente) → não mostrar nada
-    if (isInputFocused) {
+    // Modal aberto → não interferir
+    if (hasPaymentModal) {
       return <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />;
     }
 
-    // Estado 1: Carrinho vazio → buscar produto
-    if (!hasItemInCart && !hasPaymentModal && subStep < 2) {
+    // Passo 0: Buscar produto
+    if (pdvStep === 0) {
       return (
         <>
           <OnboardingTooltip
             target='input[placeholder*="Buscar produto"], input[placeholder*="produto"]'
-            message="Busque o produto que você cadastrou."
+            message="Busque e selecione o produto que você cadastrou."
             position="bottom"
             active={true}
           />
@@ -200,18 +187,16 @@ export function GuideOrchestrator() {
       );
     }
 
-    // Estado 2: Produto no carrinho, ainda não selecionou cliente → selecionar cliente
-    if (hasItemInCart && subStep < 3 && !hasPaymentModal) {
-      // Auto-avançar subStep para 2 quando produto aparece
-      if (subStep < 2) setSubStep(2);
+    // Passo 1: Selecionar cliente
+    if (pdvStep === 1) {
       return (
         <>
           <OnboardingTooltip
             target='input[placeholder*="cliente"], input[placeholder*="Buscar clie"]'
-            message="Selecione um cliente ou pule para o pagamento."
+            message="Selecione um cliente ou pule direto para o pagamento."
             position="left"
             actionLabel="Pular → Pagamento"
-            onAction={() => setSubStep(3)}
+            onAction={() => setPdvStep(2)}
             active={true}
           />
           <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
@@ -219,29 +204,24 @@ export function GuideOrchestrator() {
       );
     }
 
-    // Estado 3: Pronto para pagamento
-    if (hasItemInCart && subStep >= 3 && !hasPaymentModal) {
+    // Passo 2: Clicar pagamento
+    if (pdvStep === 2) {
       return (
         <>
           <OnboardingTooltip
             target='button'
-            message="Agora clique em Pagamento para finalizar a venda."
+            message="Clique em Pagamento para finalizar a venda."
             position="top"
-            active={false}
+            active={true}
           />
           <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
         </>
       );
     }
 
-    // Estado 4: Modal de pagamento aberto → não interferir
-    return (
-      <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
-    );
+    return <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />;
   }
 
-  // Default: just show the toast (for steps where user is not on correct route)
-  return (
-    <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />
-  );
+  // Default
+  return <ToastAchievement message={toast.message} visible={toast.visible} onHide={() => setToast(p => ({ ...p, visible: false }))} />;
 }
