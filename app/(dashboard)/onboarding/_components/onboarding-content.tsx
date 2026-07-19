@@ -41,9 +41,9 @@ export function OnboardingContent() {
   useEffect(() => {
     if (isLoading) return; // Aguarda carregar
 
-    // Se não existe progress (nunca iniciou ou já completou e foi limpo) → vai para /hoje
+    // Se não existe progress → usuário novo, mostrar tela de welcome
     if (!progress) {
-      router.replace('/hoje');
+      setPhase('welcome');
       return;
     }
 
