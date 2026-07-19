@@ -140,7 +140,7 @@ export default withAuth(
         });
         if (onbRes.ok) {
           const onbData = await onbRes.json();
-          console.log('[MIDDLEWARE-DEBUG] onboarding-check result:', JSON.stringify(onbData), 'isOnboardingRoute:', isOnboardingRoute, 'isOnboardingFlow:', isOnboardingFlow);
+          console.log('[MIDDLEWARE-DEBUG] onboarding-check result:', JSON.stringify(onbData), 'isOnboardingRoute:', isOnboardingRoute, 'isOnboardingFlow:', isOnboardingFlow, 'generatedAt:', onbData.generatedAt, 'random:', onbData.random);
           if (onbData.needsOnboarding && !isOnboardingRoute && !isOnboardingFlow) {
             console.log('[MIDDLEWARE-DEBUG] REDIRECT → /onboarding (needs onboarding)');
             return NextResponse.redirect(new URL('/onboarding', req.url));

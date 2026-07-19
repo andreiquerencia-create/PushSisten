@@ -35,18 +35,18 @@ export async function GET(request: NextRequest) {
     // Caso 1: nunca iniciou → precisa de onboarding
     if (!progress) {
       console.log('[ONBOARDING-CHECK] No progress found → needsOnboarding: true');
-      return NextResponse.json({ needsOnboarding: true });
+      return NextResponse.json({ needsOnboarding: true, generatedAt: Date.now(), random: Math.random() });
     }
 
     // Caso 2: iniciou mas não completou e não abandonou → precisa continuar
     if (!progress.completed && !progress.abandoned) {
       console.log('[ONBOARDING-CHECK] In progress (not completed, not abandoned) → needsOnboarding: true');
-      return NextResponse.json({ needsOnboarding: true });
+      return NextResponse.json({ needsOnboarding: true, generatedAt: Date.now(), random: Math.random() });
     }
 
     // Caso 3: completou ou abandonou → não redirecionar
     console.log('[ONBOARDING-CHECK] Completed or abandoned → needsOnboarding: false');
-    return NextResponse.json({ needsOnboarding: false });
+    return NextResponse.json({ needsOnboarding: false, generatedAt: Date.now(), random: Math.random() });
   } catch (error: any) {
     console.error('[ONBOARDING-CHECK] ERROR:', error?.message);
     // Fail-open: não redireciona em caso de erro
