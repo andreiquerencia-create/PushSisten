@@ -37,6 +37,17 @@ export function OnboardingContent() {
   const [currentControl, setCurrentControl] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // ─── SAFETY TIMEOUT: se ficar em "loading" por mais de 4s, redireciona ───
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (phase === 'loading') {
+        console.warn('[onboarding] Timeout de loading - redirecionando para /hoje');
+        router.replace('/hoje');
+      }
+    }, 4000);
+    return () => clearTimeout(timeout);
+  }, [phase, router]);
+
   // ─── REDIRECT LOGIC (useEffect para evitar router.push durante render) ───
   useEffect(() => {
     if (isLoading) return; // Aguarda carregar
