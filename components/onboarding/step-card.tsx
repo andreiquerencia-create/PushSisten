@@ -15,12 +15,12 @@ export function OnboardingStepCard() {
   // Don't show step card for welcome (setup screen) or celebration
   if (currentStepConfig.key === 'welcome' || currentStepConfig.key === 'celebration') return null;
 
+  const completedCount = (state.completedSteps as string[]).length;
+  const isOnCorrectRoute = !!(currentStepConfig.route && pathname.startsWith(currentStepConfig.route));
+
   // Don't show step card when user is ALREADY on the correct route
   // (the guide orchestrator handles the experience on that page)
   if (isOnCorrectRoute) return null;
-
-  const completedCount = (state.completedSteps as string[]).length;
-  const isOnCorrectRoute = !!(currentStepConfig.route && pathname.startsWith(currentStepConfig.route));
 
   const handleGoToStep = () => {
     if (currentStepConfig.route) {
