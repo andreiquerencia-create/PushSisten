@@ -127,9 +127,10 @@ export default withAuth(
 
     // ─── ONBOARDING CHECK ───
     // Non-master users: check if onboarding is needed
-    // Skip if already on /onboarding OR if route has ?onboarding=true (part of active onboarding flow)
-    const isOnboardingFlow = pathname.startsWith('/onboarding') || req.nextUrl.searchParams.get('onboarding') === 'true';
-    if (!token.isMaster && token.role !== 'vendedor' && !isOnboardingFlow) {
+    const isOnboardingRoute = pathname.startsWith('/onboarding');
+    const isOnboardingFlow = req.nextUrl.searchParams.get('onboarding') === 'true';
+
+    if (!token.isMaster && token.role !== 'vendedor') {
       try {
         const onboardingUrl = new URL('/api/onboarding-check', req.url);
         onboardingUrl.searchParams.set('userId', token.id as string);
@@ -138,12 +139,21 @@ export default withAuth(
         });
         if (onbRes.ok) {
           const onbData = await onbRes.json();
-          if (onbData.needsOnboarding) {
+          if (onbData.needsOnboarding && !isOnboardingRoute && !isOnboardingFlow) {
+            // Precisa de onboarding e NÃO está na rota → redirecionar
             return NextResponse.redirect(new URL('/onboarding', req.url));
+          }
+          if (!onbData.needsOnboarding && isOnboardingRoute) {
+            // Não precisa de onboarding mas está na rota → redirecionar para /hoje
+            return NextResponse.redirect(new URL('/hoje', req.url));
           }
         }
       } catch {
         // Fail-open: se checar falhar, não bloqueia
+        // Se está em /onboarding e falhou a checagem, redirecionar para /hoje por segurança
+        if (isOnboardingRoute) {
+          return NextResponse.redirect(new URL('/hoje', req.url));
+        }
       }
     }
 
