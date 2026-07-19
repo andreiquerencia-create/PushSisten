@@ -134,26 +134,26 @@ export default withAuth(
       try {
         const onboardingUrl = new URL('/api/onboarding-check', req.url);
         onboardingUrl.searchParams.set('userId', token.id as string);
+        console.log('[MIDDLEWARE-DEBUG] Checking onboarding for userId:', token.id, 'pathname:', pathname);
         const onbRes = await fetch(onboardingUrl.toString(), {
           headers: { 'x-middleware-check': '1' },
         });
         if (onbRes.ok) {
           const onbData = await onbRes.json();
+          console.log('[MIDDLEWARE-DEBUG] onboarding-check result:', JSON.stringify(onbData), 'isOnboardingRoute:', isOnboardingRoute, 'isOnboardingFlow:', isOnboardingFlow);
           if (onbData.needsOnboarding && !isOnboardingRoute && !isOnboardingFlow) {
-            // Precisa de onboarding e NÃO está na rota → redirecionar
+            console.log('[MIDDLEWARE-DEBUG] REDIRECT → /onboarding (needs onboarding)');
             return NextResponse.redirect(new URL('/onboarding', req.url));
           }
           if (!onbData.needsOnboarding && isOnboardingRoute) {
-            // Não precisa de onboarding mas está na rota → redirecionar para /hoje
+            console.log('[MIDDLEWARE-DEBUG] REDIRECT → /hoje (onboarding completed, user on /onboarding)');
             return NextResponse.redirect(new URL('/hoje', req.url));
           }
+        } else {
+          console.error('[MIDDLEWARE-DEBUG] onboarding-check failed:', onbRes.status);
         }
-      } catch {
-        // Fail-open: se checar falhar, não bloqueia
-        // Se está em /onboarding e falhou a checagem, redirecionar para /hoje por segurança
-        if (isOnboardingRoute) {
-          return NextResponse.redirect(new URL('/hoje', req.url));
-        }
+      } catch (err: any) {
+        console.error('[MIDDLEWARE-DEBUG] onboarding-check exception:', err?.message);
       }
     }
 

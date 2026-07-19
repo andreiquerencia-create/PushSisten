@@ -29,78 +29,75 @@ export function OnboardingContent() {
   const router = useRouter();
   const { progress, isLoading, isOnboarding, currentStep, start, updateProfile, abandon } = useOnboardingContext();
 
-  const [phase, setPhase] = useState<'loading' | 'welcome' | 'profile' | 'transition'>('loading');
+  const [phase, setPhase] = useState<'welcome' | 'profile' | 'transition'>(
+    progress?.profileCompleted ? 'transition' : progress?.currentStep === 'profile' ? 'profile' : 'welcome'
+  );
 
   // Profile form state
-  const [storeName, setStoreName] = useState('');
-  const [storeType, setStoreType] = useState('');
-  const [currentControl, setCurrentControl] = useState('');
+  const [storeName, setStoreName] = useState(progress?.storeName || '');
+  const [storeType, setStoreType] = useState(progress?.storeType || '');
+  const [currentControl, setCurrentControl] = useState(progress?.currentControl || '');
   const [saving, setSaving] = useState(false);
 
-  // ─── SAFETY TIMEOUT: se ficar em "loading" por mais de 4s, redireciona ───
+  // ─── INSTRUMENTATION: log every state change ───
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (phase === 'loading') {
-        console.warn('[onboarding] Timeout de loading - redirecionando para /hoje');
-        router.replace('/hoje');
-      }
-    }, 4000);
-    return () => clearTimeout(timeout);
-  }, [phase, router]);
+    console.log('[ONBOARDING-DEBUG] Mount. isLoading:', isLoading, 'progress:', JSON.stringify(progress), 'phase:', phase);
+  }, []);
 
-  // ─── REDIRECT LOGIC (useEffect para evitar router.push durante render) ───
   useEffect(() => {
-    if (isLoading) return; // Aguarda carregar
+    console.log('[ONBOARDING-DEBUG] isLoading changed:', isLoading);
+  }, [isLoading]);
 
-    // Se não existe progress → usuário novo, mostrar tela de welcome
-    if (!progress) {
-      setPhase('welcome');
-      return;
-    }
+  useEffect(() => {
+    console.log('[ONBOARDING-DEBUG] progress changed:', JSON.stringify(progress));
+  }, [progress]);
 
-    // Já completou → vai para /hoje
-    if (progress.completed || progress.currentStep === 'completed') {
-      router.replace('/hoje');
-      return;
-    }
+  useEffect(() => {
+    console.log('[ONBOARDING-DEBUG] phase changed:', phase);
+  }, [phase]);
 
-    // Está em etapas posteriores → redirecionar para a tela correta
-    if (progress?.currentStep === 'product') {
-      router.replace('/produtos?onboarding=true');
-      return;
-    }
-    if (progress?.currentStep === 'customer') {
-      router.replace('/clientes?onboarding=true');
-      return;
-    }
-    if (progress?.currentStep === 'sale') {
-      router.replace('/pdv?onboarding=true');
-      return;
-    }
-    if (progress?.currentStep === 'dashboard' || progress?.currentStep === 'next_steps') {
-      router.replace('/hoje');
-      return;
-    }
+  // ─── REDIRECT LOGIC ───
+  // Se onboarding já foi completado ou o step é posterior ao profile, redirecionar
+  if (progress?.completed || progress?.currentStep === 'completed') {
+    console.log('[ONBOARDING-DEBUG] REDIRECT: completed=true, going to /hoje');
+    router.push('/hoje');
+    return null;
+  }
 
-    // Definir a fase correta com base no progress
-    if (progress?.profileCompleted) {
-      setPhase('transition');
-    } else if (progress?.currentStep === 'profile') {
-      setPhase('profile');
-      setStoreName(progress?.storeName || '');
-      setStoreType(progress?.storeType || '');
-      setCurrentControl(progress?.currentControl || '');
-    } else {
-      setPhase('welcome');
-    }
-  }, [isLoading, progress, router]);
+  if (progress?.currentStep === 'product') {
+    console.log('[ONBOARDING-DEBUG] REDIRECT: step=product, going to /produtos');
+    router.push('/produtos?onboarding=true');
+    return null;
+  }
+  if (progress?.currentStep === 'customer') {
+    console.log('[ONBOARDING-DEBUG] REDIRECT: step=customer, going to /clientes');
+    router.push('/clientes?onboarding=true');
+    return null;
+  }
+  if (progress?.currentStep === 'sale') {
+    console.log('[ONBOARDING-DEBUG] REDIRECT: step=sale, going to /pdv');
+    router.push('/pdv?onboarding=true');
+    return null;
+  }
+  if (progress?.currentStep === 'dashboard' || progress?.currentStep === 'next_steps') {
+    console.log('[ONBOARDING-DEBUG] REDIRECT: step=dashboard/next_steps, going to /hoje');
+    router.push('/hoje?onboarding=true');
+    return null;
+  }
 
   const handleStart = async () => {
-    await start();
-    setPhase('profile');
+    console.log('[ONBOARDING-DEBUG] handleStart called');
+    try {
+      await start();
+      console.log('[ONBOARDING-DEBUG] handleStart success, setting phase=profile');
+      setPhase('profile');
+    } catch (e: any) {
+      console.error('[ONBOARDING-DEBUG] handleStart ERROR:', e.message);
+    }
   };
 
   const handleSkip = async () => {
+    console.log('[ONBOARDING-DEBUG] handleSkip called');
     await abandon();
     router.push('/hoje');
   };
@@ -108,31 +105,24 @@ export function OnboardingContent() {
   const handleProfileSubmit = async () => {
     if (!storeName.trim()) return;
     setSaving(true);
+    console.log('[ONBOARDING-DEBUG] handleProfileSubmit called');
     try {
       await updateProfile({ storeName: storeName.trim(), storeType, currentControl });
+      console.log('[ONBOARDING-DEBUG] updateProfile success');
       setPhase('transition');
-      // Aguarda animação e redireciona para cadastro de produto
       setTimeout(() => {
         router.push('/produtos?onboarding=true');
       }, 2000);
+    } catch (e: any) {
+      console.error('[ONBOARDING-DEBUG] handleProfileSubmit ERROR:', e.message);
     } finally {
       setSaving(false);
     }
   };
 
-  // ───── LOADING ─────
-  if (phase === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-[80vh]">
-        <div className="text-center space-y-4 px-6">
-          <div className="animate-pulse text-muted-foreground">Carregando...</div>
-        </div>
-      </div>
-    );
-  }
-
   // ───── WELCOME ─────
   if (phase === 'welcome') {
+    console.log('[ONBOARDING-DEBUG] Rendering WELCOME. isLoading:', isLoading, 'progress:', progress?.currentStep);
     return (
       <div className="flex items-center justify-center min-h-[80vh]">
         <div className="max-w-lg text-center space-y-8 px-6">

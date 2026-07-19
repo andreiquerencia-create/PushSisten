@@ -52,36 +52,64 @@ interface UseOnboardingReturn {
 }
 
 export function useOnboarding(): UseOnboardingReturn {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // INSTRUMENTATION
+  console.log('[ONBOARDING-HOOK] Render. sessionStatus:', sessionStatus, 'session.user:', session?.user?.email || 'null', 'isLoading:', isLoading);
+
   // Carrega estado do backend ao montar
   useEffect(() => {
+    console.log('[ONBOARDING-HOOK] useEffect triggered. sessionStatus:', sessionStatus, 'session?.user:', !!session?.user);
+
+    if (sessionStatus === 'loading') {
+      console.log('[ONBOARDING-HOOK] Session still loading, waiting...');
+      return;
+    }
+
     if (!session?.user) {
+      console.log('[ONBOARDING-HOOK] No session user. Setting isLoading=false.');
       setIsLoading(false);
       return;
     }
 
+    console.log('[ONBOARDING-HOOK] Fetching /api/onboarding...');
+    const startTime = Date.now();
+
     fetch('/api/onboarding')
-      .then(res => res.json())
+      .then(res => {
+        console.log('[ONBOARDING-HOOK] /api/onboarding response:', res.status, 'in', Date.now() - startTime, 'ms');
+        return res.json();
+      })
       .then(data => {
+        console.log('[ONBOARDING-HOOK] /api/onboarding data:', JSON.stringify(data));
         setProgress(data.progress || null);
       })
       .catch(err => {
-        console.error('Erro ao carregar onboarding:', err);
+        console.error('[ONBOARDING-HOOK] /api/onboarding ERROR:', err.message);
       })
-      .finally(() => setIsLoading(false));
-  }, [session?.user]);
+      .finally(() => {
+        console.log('[ONBOARDING-HOOK] Setting isLoading=false. Total time:', Date.now() - startTime, 'ms');
+        setIsLoading(false);
+      });
+  }, [session?.user, sessionStatus]);
 
   const sendAction = useCallback(async (action: string, data?: any) => {
+    console.log('[ONBOARDING-HOOK] sendAction:', action, data ? JSON.stringify(data) : '');
     const res = await fetch('/api/onboarding', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, data }),
     });
-    if (!res.ok) throw new Error('Erro ao atualizar onboarding');
+    console.log('[ONBOARDING-HOOK] sendAction response:', res.status);
+    if (!res.ok) {
+      const errBody = await res.text();
+      console.error('[ONBOARDING-HOOK] sendAction ERROR body:', errBody);
+      throw new Error('Erro ao atualizar onboarding');
+    }
     const result = await res.json();
+    console.log('[ONBOARDING-HOOK] sendAction result:', JSON.stringify(result));
     setProgress(result.progress);
   }, []);
 
