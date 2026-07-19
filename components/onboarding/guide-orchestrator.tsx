@@ -99,11 +99,11 @@ export function GuideOrchestrator() {
     if (subStep === 0) {
       return (
         <>
-          <Spotlight target='button:has(svg), [data-onboarding="new-product"], button' active={true} />
+          <Spotlight target='[data-onboarding="new-product"]' active={true} />
           <OnboardingTooltip
-            target='button:has(svg), [data-onboarding="new-product"], button'
+            target='[data-onboarding="new-product"]'
             message='Clique em "Novo Produto" para cadastrar seu primeiro produto. Só precisa de nome e preço.'
-            position="bottom"
+            position="left"
             showSkip={false}
             active={true}
           />

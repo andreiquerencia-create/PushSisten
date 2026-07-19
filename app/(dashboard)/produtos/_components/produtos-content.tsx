@@ -208,7 +208,7 @@ export function ProdutosContent() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input placeholder="Buscar produtos..." value={search} onChange={(e: any) => { setSearch(e?.target?.value ?? ''); setPage(1); }} className="pl-9" />
           </div>
-          <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" />Novo Produto</Button>
+          <Button onClick={openNew} data-onboarding="new-product"><Plus className="w-4 h-4 mr-2" />Novo Produto</Button>
         </div>
 
         <Card className="border-0 shadow-sm">
