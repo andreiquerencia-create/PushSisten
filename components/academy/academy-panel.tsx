@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAcademy } from './academy-context';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, ChevronLeft, X, GraduationCap, CheckCircle2, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
 
@@ -14,7 +14,11 @@ import { ChevronRight, ChevronLeft, X, GraduationCap, CheckCircle2, Sparkles, Ch
 export function AcademyPanel() {
   const { state, nextStep, prevStep, exitAcademy } = useAcademy();
   const router = useRouter();
+  const currentPath = usePathname();
   const [mobileExpanded, setMobileExpanded] = useState(false);
+
+  // Detectar se está no PDV (bottom tem botões importantes no mobile)
+  const isPdv = currentPath.startsWith('/pdv');
 
   if (!state.isActive || !state.module) return null;
 
@@ -58,9 +62,9 @@ export function AcademyPanel() {
     ));
   };
 
-  // ─── MOBILE VERSION (bottom card) ───
+  // ─── MOBILE VERSION (top no PDV, bottom nas outras telas) ───
   const MobilePanel = () => (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden animate-in slide-in-from-bottom-4 duration-300">
+    <div className={`fixed ${isPdv ? 'top-0' : 'bottom-0'} left-0 right-0 z-[100] lg:hidden animate-in ${isPdv ? 'slide-in-from-top-4' : 'slide-in-from-bottom-4'} duration-300`}>
       {/* Minimized bar */}
       {!mobileExpanded && (
         <div className="bg-card border-t border-border shadow-2xl px-4 py-3">
