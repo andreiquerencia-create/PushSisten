@@ -172,13 +172,43 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     estimatedTime: '8 min',
     steps: [
       {
-        title: 'Gerencie seus caixas',
-        body: '🏦 Caixas são onde o dinheiro fica. Todo pagamento vai para um caixa.\n\n👁️ "Visão Geral": saldo de cada caixa\n🔓 "Abrir Caixa": inicie o dia informando o saldo inicial\n📋 "Histórico": todas as movimentações\n🔒 "Fechamento": confira e feche o caixa no fim do dia\n\n💡 Abra o caixa todo dia antes de vender. Feche no final do expediente.',
+        title: 'Visão Geral dos Caixas',
+        body: '🏦 Caixas são onde o dinheiro fica. Todo pagamento vai para um caixa.\n\n👁️ Na aba "Visão Geral" você vê:\n💰 Saldo Total de todos os caixas\n📊 Saldo individual de cada caixa\n🔘 Caixas ativos e inativos\n\n💡 Você pode ter vários caixas: Dinheiro, PIX, Stone, Maquininha, etc. Cada forma de pagamento pode ir para um caixa diferente.',
+        route: '/caixas',
+      },
+      {
+        title: 'Histórico de Movimentações',
+        body: '📋 Na aba "Histórico" você vê TUDO que entrou e saiu de cada caixa.\n\n📅 Data e hora de cada movimentação\n🏷️ Tipo: Entrada ou Saída\n📝 Origem: venda, recebimento, ajuste, transferência\n👤 Responsável: quem fez a operação\n💲 Valor\n\n💡 Use o filtro por caixa para ver movimentações específicas. Clique em "+ Lançamento" para registrar entradas/saídas manuais.',
+        route: '/caixas',
+      },
+      {
+        title: 'Abertura e Fechamento',
+        body: '🔓 Na aba "Fechamento" você controla as sessões de caixa.\n\n▶️ Abrir Caixa: inicie o dia informando o saldo inicial (contagem física)\n⏹️ Fechar Caixa: encerre o dia conferindo o saldo final\n\n📊 O sistema mostra:\n🏦 Saldo de abertura\n💰 Saldo do sistema (calculado)\n🧮 Saldo real contado\n⚠️ Diferença (se houver)\n\n💡 Abra o caixa toda manhã. Feche no final do expediente. Isso garante controle.',
+        route: '/caixas',
+      },
+      {
+        title: 'Ajuste de Caixa',
+        body: '🔧 O "Ajuste de Caixa" serve para corrigir diferenças entre o saldo do sistema e o saldo real.\n\n📝 Como usar:\n👉 Clique em "Ajuste de Caixa"\n🏦 Selecione o caixa\n🧮 Informe o saldo real contado\n📂 Escolha o tipo de ajuste (Diferença Encontrada)\n✏️ Descreva o motivo\n💾 Confirme\n\n💡 Use quando contar o dinheiro e o valor não bater com o sistema.',
+        route: '/caixas',
+      },
+      {
+        title: 'Reconciliação de Saldos',
+        body: '✅ A "Reconciliação" verifica a integridade de todos os caixas.\n\n🔍 O que faz:\n🧮 Recalcula saldos a partir do saldo inicial + todas as movimentações\n⚠️ Identifica e corrige divergências automáticas\n\n👉 Clique em "Reconciliar"\n🛡️ Clique em "Verificar Saldos"\n\n💡 Use quando suspeitar que o saldo está incorreto ou após importações/ajustes.',
+        route: '/caixas',
+      },
+      {
+        title: 'Transferências entre Caixas',
+        body: '🔄 "Transferir" move dinheiro de um caixa para outro.\n\n📝 Como usar:\n👉 Clique em "Transferir"\n🏦 Selecione o caixa de origem\n🏦 Selecione o caixa de destino\n💲 Informe o valor\n💾 Confirme\n\n💡 Use quando precisar mover dinheiro entre caixas (ex: tirar dinheiro do caixa físico e depositar no banco).',
+        route: '/caixas',
+      },
+      {
+        title: 'Criar Novo Caixa',
+        body: '➕ "Novo Caixa" cria um caixa adicional para sua empresa.\n\n📝 Como usar:\n👉 Clique em "+ Novo Caixa"\n✏️ Defina o nome (ex: Banco Itaú, Cofre, Maquininha Stone)\n🏷️ Escolha o tipo: Físico ou Digital\n💾 Salve\n\n💡 Crie caixas separados para cada forma de recebimento. Isso facilita a conferência e o controle.',
         route: '/caixas',
       },
       {
         title: '✅ Módulo concluído!',
-        body: '🏆 Agora você sabe gerenciar seus caixas.',
+        body: '🏆 Agora você domina a gestão de caixas: abertura, fechamento, ajustes, reconciliação, transferências e criação de novos caixas.',
         celebration: true,
       },
     ],
