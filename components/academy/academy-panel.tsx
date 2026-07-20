@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAcademy } from './academy-context';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -64,36 +64,37 @@ export function AcademyPanel() {
 
   // ─── MOBILE VERSION ───
   // Pill arrastável + modal central
-  const [pillPos, setPillPos] = useState({ x: -1, y: -1 }); // -1 = posição padrão
+  const [pillPos, setPillPos] = useState({ x: -1, y: -1 });
   const [dragging, setDragging] = useState(false);
-  const dragRef = useState<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
+  const dragStartRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
 
   const getDefaultPillPos = () => ({
-    x: (typeof window !== 'undefined' ? window.innerWidth : 400) - 100,
+    x: (typeof window !== 'undefined' ? window.innerWidth : 400) - 80,
     y: (typeof window !== 'undefined' ? window.innerHeight : 800) * 0.65,
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     const pos = pillPos.x === -1 ? getDefaultPillPos() : pillPos;
-    dragRef[1]({ startX: touch.clientX, startY: touch.clientY, startPosX: pos.x, startPosY: pos.y });
-    setDragging(true);
+    dragStartRef.current = { startX: touch.clientX, startY: touch.clientY, startPosX: pos.x, startPosY: pos.y };
+    setDragging(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!dragRef[0]) return;
+    if (!dragStartRef.current) return;
     const touch = e.touches[0];
-    const dx = touch.clientX - dragRef[0].startX;
-    const dy = touch.clientY - dragRef[0].startY;
+    const dx = touch.clientX - dragStartRef.current.startX;
+    const dy = touch.clientY - dragStartRef.current.startY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) setDragging(true);
     setPillPos({
-      x: Math.max(0, Math.min(dragRef[0].startPosX + dx, (window?.innerWidth || 400) - 90)),
-      y: Math.max(60, Math.min(dragRef[0].startPosY + dy, (window?.innerHeight || 800) - 60)),
+      x: Math.max(40, Math.min(dragStartRef.current.startPosX + dx, (window?.innerWidth || 400) - 40)),
+      y: Math.max(80, Math.min(dragStartRef.current.startPosY + dy, (window?.innerHeight || 800) - 40)),
     });
   };
 
   const handleTouchEnd = () => {
-    setDragging(false);
-    dragRef[1](null);
+    dragStartRef.current = null;
+    setTimeout(() => setDragging(false), 100);
   };
 
   const pillPosition = pillPos.x === -1 ? getDefaultPillPos() : pillPos;
