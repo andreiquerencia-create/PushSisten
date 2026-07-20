@@ -171,10 +171,10 @@ export function AcademyPanel() {
             {/* Navigation */}
             <div className="px-4 py-3 border-t border-border">
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => { handlePrev(); setMobileExpanded(false); }} disabled={isFirstStep} className="flex-1 text-xs h-9">
+                <Button variant="outline" size="sm" onClick={handlePrev} disabled={isFirstStep} className="flex-1 text-xs h-9">
                   <ChevronLeft className="w-3.5 h-3.5 mr-1" />Voltar
                 </Button>
-                <Button size="sm" onClick={() => { handleNext(); setMobileExpanded(false); }} className={`flex-1 text-xs h-9 ${isLastStep ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}>
+                <Button size="sm" onClick={handleNext} className={`flex-1 text-xs h-9 ${isLastStep ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}>
                   {isLastStep ? 'Concluir 🎉' : 'Próximo'}<ChevronRight className="w-3.5 h-3.5 ml-1" />
                 </Button>
               </div>
