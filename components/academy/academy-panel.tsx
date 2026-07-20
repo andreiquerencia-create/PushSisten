@@ -16,6 +16,9 @@ export function AcademyPanel() {
   const router = useRouter();
   const currentPath = usePathname();
   const [mobileExpanded, setMobileExpanded] = useState(false);
+  const [pillPos, setPillPos] = useState({ x: -1, y: -1 });
+  const [dragging, setDragging] = useState(false);
+  const dragStartRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
 
   // Detectar se está no PDV (bottom tem botões importantes no mobile)
   const isPdv = currentPath.startsWith('/pdv');
@@ -64,9 +67,6 @@ export function AcademyPanel() {
 
   // ─── MOBILE VERSION ───
   // Pill arrastável + modal central
-  const [pillPos, setPillPos] = useState({ x: -1, y: -1 });
-  const [dragging, setDragging] = useState(false);
-  const dragStartRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
 
   const getDefaultPillPos = () => ({
     x: (typeof window !== 'undefined' ? window.innerWidth : 400) - 80,
