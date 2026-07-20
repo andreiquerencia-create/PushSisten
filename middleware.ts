@@ -75,7 +75,6 @@ const SUBSCRIPTION_EXEMPT = [
   '/master',
   '/login',
   '/signup',
-  '/setup',
 ];
 
 export default withAuth(
@@ -200,6 +199,5 @@ export const config = {
     '/auditoria/:path*',
     '/sem-classificacao/:path*',
     '/relatorios-inteligentes/:path*',
-    '/setup/:path*',
   ],
 };

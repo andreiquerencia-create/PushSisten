@@ -113,7 +113,6 @@ model User {
   company       Company?  @relation(fields: [companyId], references: [id])
   sales         Sale[]
   seller        Seller?
-  onboardingState OnboardingState?
 
   @@index([companyId])
   @@map("users")
