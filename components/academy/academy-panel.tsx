@@ -1,18 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { useAcademy } from './academy-context';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronLeft, X, GraduationCap, CheckCircle2, Sparkles } from 'lucide-react';
+import { ChevronRight, ChevronLeft, X, GraduationCap, CheckCircle2, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
 
 /**
  * Painel lateral fixo do Push Academy.
- * Mostra cabeçalho destacado + texto completo da instrução.
- * Um "Próximo" = uma tela/tarefa inteira.
+ * Desktop: coluna direita 320px.
+ * Mobile: card minimizável no bottom.
  */
 export function AcademyPanel() {
   const { state, nextStep, prevStep, exitAcademy } = useAcademy();
   const router = useRouter();
+  const [mobileExpanded, setMobileExpanded] = useState(false);
 
   if (!state.isActive || !state.module) return null;
 
@@ -25,17 +27,11 @@ export function AcademyPanel() {
   const isCelebration = currentStepData.celebration;
 
   const handleNext = () => {
-    if (isLastStep) {
-      nextStep(); // marca como concluído
-      router.push('/push-academy');
-      return;
-    }
-
-    // Avançar e navegar para próxima rota
     const nextStepData = state.module!.steps[state.currentStep + 1];
     nextStep();
-
-    if (nextStepData?.route) {
+    if (isLastStep) {
+      router.push('/push-academy');
+    } else if (nextStepData?.route) {
       router.push(nextStepData.route);
     }
   };
@@ -44,7 +40,6 @@ export function AcademyPanel() {
     if (isFirstStep) return;
     const prevStepData = state.module!.steps[state.currentStep - 1];
     prevStep();
-
     if (prevStepData?.route) {
       router.push(prevStepData.route);
     }
@@ -55,7 +50,6 @@ export function AcademyPanel() {
     router.push('/push-academy');
   };
 
-  // Formatar texto com quebras de linha
   const formatBody = (text: string) => {
     return text.split('\n').map((line, i) => (
       <span key={i} className="block mb-1">
@@ -64,19 +58,110 @@ export function AcademyPanel() {
     ));
   };
 
-  return (
-    <div className="fixed top-0 right-0 bottom-0 w-80 z-[100] flex flex-col bg-card border-l border-border shadow-2xl animate-in slide-in-from-right-4 duration-300">
+  // ─── MOBILE VERSION (bottom card) ───
+  const MobilePanel = () => (
+    <div className="fixed bottom-0 left-0 right-0 z-[100] lg:hidden animate-in slide-in-from-bottom-4 duration-300">
+      {/* Minimized bar */}
+      {!mobileExpanded && (
+        <div className="bg-card border-t border-border shadow-2xl px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <GraduationCap className="w-4 h-4 text-primary flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-foreground truncate">{currentStepData.title}</p>
+                <p className="text-[10px] text-muted-foreground">Passo {state.currentStep + 1}/{state.totalSteps}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setMobileExpanded(true)} className="p-2 rounded-md hover:bg-muted">
+                <ChevronUp className="w-4 h-4" />
+              </button>
+              <button onClick={handleExit} className="p-2 rounded-md hover:bg-muted text-muted-foreground">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          {/* Mini progress */}
+          <div className="h-1 bg-muted rounded-full mt-2 overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
+          </div>
+        </div>
+      )}
+
+      {/* Expanded card */}
+      {mobileExpanded && (
+        <div className="bg-card border-t border-border shadow-2xl max-h-[70vh] flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-primary" />
+              <span className="text-xs font-semibold text-primary">Push Academy</span>
+              <span className="text-[10px] text-muted-foreground">• {state.module.title}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setMobileExpanded(false)} className="p-1.5 rounded-md hover:bg-muted">
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              <button onClick={handleExit} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Progress */}
+          <div className="px-4 py-2">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-muted-foreground">Passo {state.currentStep + 1} de {state.totalSteps}</span>
+              <span className="text-[10px] font-medium text-primary">{progressPercent}%</span>
+            </div>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-4 py-3">
+            <div className={`rounded-lg px-3 py-2 mb-3 ${
+              isCelebration
+                ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
+                : 'bg-primary/5 border border-primary/20'
+            }`}>
+              <div className="flex items-center gap-2">
+                {isCelebration ? <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" /> : <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />}
+                <h4 className={`text-sm font-semibold ${isCelebration ? 'text-emerald-700 dark:text-emerald-400' : 'text-primary'}`}>{currentStepData.title}</h4>
+              </div>
+            </div>
+            <div className="text-sm text-foreground/80 leading-relaxed space-y-1">
+              {formatBody(currentStepData.body)}
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="px-4 py-3 border-t border-border">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handlePrev} disabled={isFirstStep} className="flex-1 text-xs h-9">
+                <ChevronLeft className="w-3.5 h-3.5 mr-1" />Voltar
+              </Button>
+              <Button size="sm" onClick={handleNext} className={`flex-1 text-xs h-9 ${isLastStep ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}>
+                {isLastStep ? 'Concluir 🎉' : 'Próximo'}<ChevronRight className="w-3.5 h-3.5 ml-1" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // ─── DESKTOP VERSION (side panel) ───
+  const DesktopPanel = () => (
+    <div className="hidden lg:flex fixed top-0 right-0 bottom-0 w-80 z-[100] flex-col bg-card border-l border-border shadow-2xl animate-in slide-in-from-right-4 duration-300">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-primary/5 to-accent/5">
         <div className="flex items-center gap-2">
           <GraduationCap className="w-4 h-4 text-primary" />
           <span className="text-xs font-semibold text-primary">Push Academy</span>
         </div>
-        <button
-          onClick={handleExit}
-          className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          title="Sair do treinamento"
-        >
+        <button onClick={handleExit} className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Sair do treinamento">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -88,72 +173,49 @@ export function AcademyPanel() {
           <span className="text-xs text-muted-foreground font-medium">{state.module.title}</span>
         </div>
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] text-muted-foreground">
-            Passo {state.currentStep + 1} de {state.totalSteps}
-          </span>
+          <span className="text-[10px] text-muted-foreground">Passo {state.currentStep + 1} de {state.totalSteps}</span>
           <span className="text-[10px] font-medium text-primary">{progressPercent}%</span>
         </div>
         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${progressPercent}%` }}
-          />
+          <div className="h-full bg-primary rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }} />
         </div>
       </div>
 
-      {/* Step content: título destacado + corpo */}
+      {/* Step content */}
       <div className="flex-1 px-4 py-3 overflow-y-auto">
-        {/* Título destacado */}
         <div className={`rounded-lg px-3 py-2 mb-3 ${
           isCelebration
             ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
             : 'bg-primary/5 border border-primary/20'
         }`}>
           <div className="flex items-center gap-2">
-            {isCelebration ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            ) : (
-              <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
-            )}
-            <h4 className={`text-sm font-semibold ${
-              isCelebration ? 'text-emerald-700 dark:text-emerald-400' : 'text-primary'
-            }`}>
-              {currentStepData.title}
-            </h4>
+            {isCelebration ? <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" /> : <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />}
+            <h4 className={`text-sm font-semibold ${isCelebration ? 'text-emerald-700 dark:text-emerald-400' : 'text-primary'}`}>{currentStepData.title}</h4>
           </div>
         </div>
-
-        {/* Corpo do texto */}
         <div className="text-sm text-foreground/80 leading-relaxed space-y-1">
           {formatBody(currentStepData.body)}
         </div>
       </div>
 
-      {/* Navigation buttons */}
+      {/* Navigation */}
       <div className="p-4 border-t border-border bg-card">
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrev}
-            disabled={isFirstStep}
-            className="flex-1 text-xs h-9"
-          >
-            <ChevronLeft className="w-3.5 h-3.5 mr-1" />
-            Voltar
+          <Button variant="outline" size="sm" onClick={handlePrev} disabled={isFirstStep} className="flex-1 text-xs h-9">
+            <ChevronLeft className="w-3.5 h-3.5 mr-1" />Voltar
           </Button>
-          <Button
-            size="sm"
-            onClick={handleNext}
-            className={`flex-1 text-xs h-9 ${
-              isLastStep ? 'bg-emerald-600 hover:bg-emerald-700' : ''
-            }`}
-          >
-            {isLastStep ? 'Concluir 🎉' : 'Próximo'}
-            <ChevronRight className="w-3.5 h-3.5 ml-1" />
+          <Button size="sm" onClick={handleNext} className={`flex-1 text-xs h-9 ${isLastStep ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}>
+            {isLastStep ? 'Concluir 🎉' : 'Próximo'}<ChevronRight className="w-3.5 h-3.5 ml-1" />
           </Button>
         </div>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      <DesktopPanel />
+      <MobilePanel />
+    </>
   );
 }

@@ -14,7 +14,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-background">
       <AppSidebar />
-      <main className={`flex-1 min-w-0 overflow-auto transition-all duration-300 ${state.isActive ? 'pr-80' : ''}`}>
+      <main className={`flex-1 min-w-0 overflow-auto transition-all duration-300 ${state.isActive ? 'lg:pr-80' : ''}`}>
         {children}
       </main>
       <AcademyPanel />
