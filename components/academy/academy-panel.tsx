@@ -1,37 +1,57 @@
 'use client';
 
+import { useAcademy } from './academy-context';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, ChevronLeft, X, GraduationCap, CheckCircle2 } from 'lucide-react';
 
-interface AcademyPanelProps {
-  moduleTitle: string;
-  moduleIcon: string;
-  submoduleTitle: string;
-  instruction: string;
-  currentStep: number;
-  totalSteps: number;
-  onNext: () => void;
-  onPrev: () => void;
-  onExit: () => void;
-}
+/**
+ * Painel lateral fixo do Push Academy.
+ * Renderizado no layout principal — aparece em qualquer rota quando o Academy está ativo.
+ */
+export function AcademyPanel() {
+  const { state, nextStep, prevStep, exitAcademy, getCurrentInstruction } = useAcademy();
+  const router = useRouter();
 
-export function AcademyPanel({
-  moduleTitle,
-  moduleIcon,
-  submoduleTitle,
-  instruction,
-  currentStep,
-  totalSteps,
-  onNext,
-  onPrev,
-  onExit,
-}: AcademyPanelProps) {
-  const progressPercent = totalSteps > 0 ? Math.round(((currentStep + 1) / totalSteps) * 100) : 0;
-  const isLastStep = currentStep >= totalSteps - 1;
-  const isFirstStep = currentStep === 0;
+  if (!state.isActive || !state.module) return null;
 
-  // Detectar se é um step de celebração
-  const isCelebration = instruction.startsWith('✅') || instruction.startsWith('🎉');
+  const currentInstruction = getCurrentInstruction();
+  if (!currentInstruction) return null;
+
+  const progressPercent = state.totalSteps > 0 ? Math.round(((state.currentStep + 1) / state.totalSteps) * 100) : 0;
+  const isLastStep = state.currentStep >= state.totalSteps - 1;
+  const isFirstStep = state.currentStep === 0;
+  const isCelebration = currentInstruction.instruction.startsWith('✅') || currentInstruction.instruction.startsWith('🎉');
+
+  const handleNext = () => {
+    // Se o próximo step tem rota, navegar primeiro
+    const allSteps = state.module!.submodules.flatMap(sub => sub.steps.map(step => ({ ...step, submoduleTitle: sub.title })));
+    const nextStepData = allSteps[state.currentStep + 1];
+
+    nextStep();
+
+    if (isLastStep) {
+      router.push('/push-academy');
+    } else if (nextStepData?.route) {
+      router.push(nextStepData.route);
+    }
+  };
+
+  const handlePrev = () => {
+    const allSteps = state.module!.submodules.flatMap(sub => sub.steps.map(step => ({ ...step, submoduleTitle: sub.title })));
+    const prevStepData = allSteps[state.currentStep - 1];
+
+    prevStep();
+
+    if (prevStepData?.route) {
+      router.push(prevStepData.route);
+    }
+  };
+
+  const handleExit = () => {
+    exitAcademy();
+    router.push('/push-academy');
+  };
 
   return (
     <div className="fixed top-0 right-0 bottom-0 w-80 z-[100] flex flex-col bg-card border-l border-border shadow-2xl animate-in slide-in-from-right-4 duration-300">
@@ -42,7 +62,7 @@ export function AcademyPanel({
           <span className="text-xs font-semibold text-primary">Push Academy</span>
         </div>
         <button
-          onClick={onExit}
+          onClick={handleExit}
           className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
           title="Sair do treinamento"
         >
@@ -53,17 +73,17 @@ export function AcademyPanel({
       {/* Module info */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-lg">{moduleIcon}</span>
-          <h3 className="text-sm font-semibold text-foreground">{moduleTitle}</h3>
+          <span className="text-lg">{state.module.icon}</span>
+          <h3 className="text-sm font-semibold text-foreground">{state.module.title}</h3>
         </div>
-        <p className="text-[11px] text-muted-foreground">{submoduleTitle}</p>
+        <p className="text-[11px] text-muted-foreground">{currentInstruction.submoduleTitle}</p>
       </div>
 
       {/* Progress bar */}
       <div className="px-4 pb-3">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[10px] text-muted-foreground">
-            Passo {currentStep + 1} de {totalSteps}
+            Passo {state.currentStep + 1} de {state.totalSteps}
           </span>
           <span className="text-[10px] font-medium text-primary">{progressPercent}%</span>
         </div>
@@ -89,7 +109,7 @@ export function AcademyPanel({
             </div>
           )}
           <p className="text-sm text-foreground leading-relaxed">
-            {instruction}
+            {currentInstruction.instruction}
           </p>
         </div>
       </div>
@@ -100,7 +120,7 @@ export function AcademyPanel({
           <Button
             variant="outline"
             size="sm"
-            onClick={onPrev}
+            onClick={handlePrev}
             disabled={isFirstStep}
             className="flex-1 text-xs h-9"
           >
@@ -109,7 +129,7 @@ export function AcademyPanel({
           </Button>
           <Button
             size="sm"
-            onClick={onNext}
+            onClick={handleNext}
             className={`flex-1 text-xs h-9 ${
               isLastStep ? 'bg-emerald-600 hover:bg-emerald-700' : ''
             }`}

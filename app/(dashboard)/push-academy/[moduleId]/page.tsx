@@ -1,111 +1,48 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getModuleById, getTotalStepsForModule } from '@/lib/academy/modules';
-import { AcademyPanel } from '@/components/academy/academy-panel';
+import { useAcademy } from '@/components/academy/academy-context';
+import { getModuleById } from '@/lib/academy/modules';
 
 export default function AcademyModulePage() {
   const params = useParams();
   const router = useRouter();
+  const { state, startModule } = useAcademy();
   const moduleId = params.moduleId as string;
   const mod = getModuleById(moduleId);
+  const [initialized, setInitialized] = useState(false);
 
-  const [currentStep, setCurrentStep] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  const totalSteps = mod ? getTotalStepsForModule(moduleId) : 0;
-
-  // Carregar progresso salvo
   useEffect(() => {
+    if (!mod || initialized) return;
+
+    // Carregar progresso salvo
     fetch('/api/academy-progress')
       .then(res => res.json())
       .then(data => {
         const p = (data.progress || []).find((item: any) => item.moduleId === moduleId);
-        if (p && p.status === 'in_progress') {
-          setCurrentStep(p.currentStep);
+        const fromStep = (p && p.status === 'in_progress') ? p.currentStep : 0;
+
+        // Ativar o Academy
+        startModule(moduleId, fromStep);
+        setInitialized(true);
+
+        // Navegar para a rota do step atual
+        const allSteps = mod.submodules.flatMap(sub => sub.steps);
+        const currentStepData = allSteps[fromStep];
+        if (currentStepData?.route) {
+          router.replace(currentStepData.route);
+        } else {
+          router.replace('/hoje');
         }
       })
-      .catch(err => console.error('Erro ao carregar progresso:', err))
-      .finally(() => setLoading(false));
-  }, [moduleId]);
-
-  // Salvar progresso
-  const saveProgress = async (step: number, status: string) => {
-    await fetch('/api/academy-progress', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        moduleId,
-        currentStep: step,
-        totalSteps,
-        status,
-      }),
-    });
-  };
-
-  // Obter step atual (flatten submodules)
-  const getAllSteps = () => {
-    if (!mod) return [];
-    const steps: { instruction: string; route?: string; submoduleTitle: string }[] = [];
-    mod.submodules.forEach(sub => {
-      sub.steps.forEach(step => {
-        steps.push({ ...step, submoduleTitle: sub.title });
+      .catch(err => {
+        console.error('Erro ao carregar progresso:', err);
+        startModule(moduleId, 0);
+        setInitialized(true);
+        router.replace('/hoje');
       });
-    });
-    return steps;
-  };
-
-  const allSteps = getAllSteps();
-  const currentStepData = allSteps[currentStep];
-
-  // Navegação
-  const handleNext = async () => {
-    const nextStep = currentStep + 1;
-    if (nextStep >= allSteps.length) {
-      // Módulo concluído
-      await saveProgress(nextStep, 'completed');
-      router.push('/push-academy');
-      return;
-    }
-    setCurrentStep(nextStep);
-    await saveProgress(nextStep, 'in_progress');
-
-    // Se o próximo step tem rota, navegar
-    const nextStepData = allSteps[nextStep];
-    if (nextStepData?.route) {
-      router.push(nextStepData.route);
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentStep > 0) {
-      const prevStep = currentStep - 1;
-      setCurrentStep(prevStep);
-      saveProgress(prevStep, 'in_progress');
-
-      const prevStepData = allSteps[prevStep];
-      if (prevStepData?.route) {
-        router.push(prevStepData.route);
-      }
-    }
-  };
-
-  const handleExit = () => {
-    saveProgress(currentStep, currentStep === 0 ? 'not_started' : 'in_progress');
-    router.push('/push-academy');
-  };
-
-  // Iniciar módulo
-  useEffect(() => {
-    if (!loading && mod) {
-      saveProgress(currentStep, 'in_progress');
-      // Navegar para a rota do step atual
-      if (currentStepData?.route) {
-        router.push(currentStepData.route);
-      }
-    }
-  }, [loading]);
+  }, [mod, moduleId, initialized, startModule, router]);
 
   if (!mod) {
     return (
@@ -115,19 +52,13 @@ export default function AcademyModulePage() {
     );
   }
 
-  if (loading) return null;
-
+  // Tela de loading enquanto inicializa
   return (
-    <AcademyPanel
-      moduleTitle={mod.title}
-      moduleIcon={mod.icon}
-      submoduleTitle={currentStepData?.submoduleTitle || ''}
-      instruction={currentStepData?.instruction || ''}
-      currentStep={currentStep}
-      totalSteps={allSteps.length}
-      onNext={handleNext}
-      onPrev={handlePrev}
-      onExit={handleExit}
-    />
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="text-center space-y-2">
+        <div className="text-3xl">{mod.icon}</div>
+        <p className="text-sm text-muted-foreground animate-pulse">Iniciando {mod.title}...</p>
+      </div>
+    </div>
   );
 }
