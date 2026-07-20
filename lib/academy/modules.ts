@@ -143,13 +143,23 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     estimatedTime: '8 min',
     steps: [
       {
-        title: 'Controle financeiro',
-        body: '💰 Aqui você controla tudo que entra e sai de dinheiro.\n\n📝 Para registrar uma despesa:\n👉 Clique em "Nova Saída"\n✏️ Preencha: descrição, valor, data e categoria\n💾 Clique em Salvar\n\n💡 As entradas de vendas aparecem automaticamente. Você só precisa registrar despesas (aluguel, fornecedores, salários, etc).',
+        title: 'Lançamentos financeiros',
+        body: '💰 Aqui você controla tudo que entra e sai de dinheiro.\n\n📝 Para registrar uma despesa:\n👉 Clique em "Nova Saída"\n✏️ Preencha: descrição, valor, data e categoria\n💾 Clique em Salvar\n\n💡 As entradas de vendas aparecem automaticamente. Você só precisa registrar despesas (aluguel, fornecedores, salários, etc).\n\n⚠️ Lançamentos "Sem Classificação" precisam ser categorizados para aparecer corretamente no DRE.',
+        route: '/financeiro',
+      },
+      {
+        title: 'Metas & Equilíbrio',
+        body: '🎯 Nesta aba você descobre quanto precisa vender para cobrir seus custos.\n\n📊 Ponto de Equilíbrio: valor mínimo de vendas para não ter prejuízo\n📅 Meta Diária: quanto precisa faturar por dia\n📈 Meta Semanal: objetivo da semana\n💰 Lucro Projetado: estimativa de lucro no período\n\n📉 "Quanto Preciso Vender?": mostra o faturado vs. ponto de equilíbrio\n⏳ Falta Vender: quanto ainda precisa no mês\n📆 Dias Restantes: dias úteis até o fim do mês\n\n💡 Clique na aba "Metas & Equilíbrio" para visualizar.',
+        route: '/financeiro',
+      },
+      {
+        title: 'Simulador de Crescimento',
+        body: '📐 O Simulador calcula cenários de crescimento para sua empresa.\n\n🔢 Preencha:\n💸 Despesas mensais (R$)\n📊 Margem média (%)\n💰 Faturamento atual (R$)\n📈 Crescimento desejado (%)\n🎯 Lucro desejado (R$)\n\n👉 Clique em "Calcular"\n\n📋 O sistema mostra simulações de crescimento (10%, 20%, 30%) com:\n• Meta mensal e diária\n• Lucro estimado para cada cenário\n\n💡 Use o simulador para definir metas realistas de crescimento.',
         route: '/financeiro',
       },
       {
         title: '✅ Módulo concluído!',
-        body: '🏆 Agora você sabe registrar e controlar suas finanças.',
+        body: '🏆 Agora você sabe registrar despesas, interpretar metas e simular crescimento.',
         celebration: true,
       },
     ],
