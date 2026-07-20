@@ -57,10 +57,9 @@ export function AcademyPanel() {
 
   // Formatar texto com quebras de linha
   const formatBody = (text: string) => {
-    return text.split('\\n').map((line, i) => (
-      <span key={i}>
+    return text.split('\n').map((line, i) => (
+      <span key={i} className="block mb-1">
         {line}
-        {i < text.split('\\n').length - 1 && <br />}
       </span>
     ));
   };
