@@ -1,12 +1,8 @@
 export interface AcademyStep {
-  instruction: string;
-  route?: string; // Se definido, navega para essa rota neste passo
-}
-
-export interface AcademySubmodule {
-  id: string;
-  title: string;
-  steps: AcademyStep[];
+  title: string; // Cabeçalho destacado
+  body: string; // Texto completo da instrução
+  route?: string; // Se definido, navega para essa rota
+  celebration?: boolean; // Se é um step de celebração
 }
 
 export interface AcademyModule {
@@ -15,7 +11,7 @@ export interface AcademyModule {
   description: string;
   icon: string;
   estimatedTime: string;
-  submodules: AcademySubmodule[];
+  steps: AcademyStep[];
 }
 
 export const ACADEMY_MODULES: AcademyModule[] = [
@@ -25,63 +21,41 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Prepare sua empresa para realizar a primeira venda.',
     icon: '🚀',
     estimatedTime: '10 min',
-    submodules: [
+    steps: [
       {
-        id: '1.1',
-        title: 'Conhecendo o Push',
-        steps: [
-          { instruction: 'Bem-vindo ao PushSisten! Vamos conhecer o sistema juntos.' },
-          { instruction: 'No menu à esquerda você encontra todas as áreas do sistema.' },
-          { instruction: 'Clique em "Hoje" no menu. Essa é sua Central do Dia — onde tudo começa.', route: '/hoje' },
-          { instruction: 'Aqui você verá o resumo do dia: vendas, caixa, cobranças e saúde da loja.' },
-          { instruction: 'Agora vamos para o próximo passo: criar sua primeira categoria.' },
-        ],
+        title: 'Bem-vindo ao PushSisten!',
+        body: 'Vamos conhecer o sistema juntos.\n\nNo menu à esquerda você encontra todas as áreas do sistema: vendas, produtos, clientes, financeiro e muito mais.\n\nClique em "Hoje" no menu para ver a Central do Dia — onde tudo começa. Ali você verá o resumo do dia: vendas, caixa, cobranças e saúde da loja.\n\nQuando estiver pronto, clique em Próximo para criar sua primeira categoria.',
+        route: '/hoje',
       },
       {
-        id: '1.2',
-        title: 'Sua primeira categoria',
-        steps: [
-          { instruction: 'Categorias organizam seus produtos. Ex: Blusas, Calças, Acessórios.', route: '/categorias' },
-          { instruction: 'Clique em "Nova Categoria" para criar a primeira.' },
-          { instruction: 'Digite o nome da categoria (ex: Blusas) e clique em Salvar.' },
-          { instruction: '✅ Categoria criada! Agora seus produtos terão organização.' },
-        ],
+        title: 'Crie sua primeira categoria',
+        body: 'Categorias organizam seus produtos. Ex: Blusas, Calças, Acessórios.\n\n1. Clique em "Nova Categoria"\n2. Digite o nome da categoria (ex: Blusas)\n3. Clique em Salvar\n\nVocê pode criar quantas categorias quiser. Quando terminar, clique em Próximo.',
+        route: '/categorias',
       },
       {
-        id: '1.3',
-        title: 'Seu primeiro fornecedor',
-        steps: [
-          { instruction: 'Fornecedores são opcionais, mas ajudam a rastrear de quem você compra.', route: '/fornecedores' },
-          { instruction: 'Clique em "Novo" para cadastrar um fornecedor.' },
-          { instruction: 'Preencha o nome e clique em Salvar. Os outros campos são opcionais.' },
-          { instruction: '✅ Fornecedor cadastrado! Você poderá vinculá-lo aos seus produtos.' },
-        ],
+        title: 'Cadastre um fornecedor (opcional)',
+        body: 'Fornecedores ajudam a rastrear de quem você compra.\n\n1. Clique em "Novo"\n2. Preencha o nome do fornecedor\n3. Clique em Salvar\n\nOs outros campos são opcionais. Se não quiser cadastrar agora, pode pular direto para o próximo passo.',
+        route: '/fornecedores',
       },
       {
-        id: '1.4',
-        title: 'Seu primeiro produto',
-        steps: [
-          { instruction: 'Agora vamos cadastrar seu primeiro produto.', route: '/produtos' },
-          { instruction: 'Clique em "Novo Produto".' },
-          { instruction: 'Digite o nome do produto (ex: Blusa Modal Preta).' },
-          { instruction: 'Informe o preço de venda.' },
-          { instruction: 'Informe o preço de custo (quanto você pagou).' },
-          { instruction: 'Defina a quantidade em estoque.' },
-          { instruction: 'Selecione a categoria que você criou.' },
-          { instruction: 'Clique em Salvar.' },
-          { instruction: '✅ Produto cadastrado! Ele já está pronto para ser vendido no PDV.' },
-        ],
+        title: 'Cadastre seu primeiro produto',
+        body: 'Agora vamos cadastrar seu primeiro produto.\n\n1. Clique em "Novo Produto"\n2. Digite o nome (ex: Blusa Modal Preta)\n3. Informe o preço de custo (quanto você pagou)\n4. Informe o preço de venda\n5. Defina a quantidade em estoque\n6. Selecione a categoria que você criou\n7. Clique em Salvar',
+        route: '/produtos',
       },
       {
-        id: '1.5',
-        title: 'Seu primeiro cliente',
-        steps: [
-          { instruction: 'Clientes permitem rastrear compras e oferecer crediário.', route: '/clientes' },
-          { instruction: 'Clique em "Novo Cliente".' },
-          { instruction: 'Preencha o nome e o telefone. Os outros campos são opcionais.' },
-          { instruction: 'Clique em Salvar.' },
-          { instruction: '✅ Cliente cadastrado! Agora você poderá associá-lo às vendas.' },
-        ],
+        title: '✅ Produto cadastrado!',
+        body: 'Ele já está pronto para ser vendido no PDV.\n\nAgora vamos cadastrar seu primeiro cliente.',
+        celebration: true,
+      },
+      {
+        title: 'Cadastre seu primeiro cliente',
+        body: 'Clientes permitem rastrear compras e oferecer crediário.\n\n1. Clique em "Novo Cliente"\n2. Preencha o nome e o telefone\n3. Clique em Salvar\n\nOs outros campos são opcionais. Você também pode cadastrar clientes direto no PDV durante a venda.',
+        route: '/clientes',
+      },
+      {
+        title: '🎉 Módulo 1 concluído!',
+        body: 'Sua empresa já tem categoria, produto e cliente cadastrados.\n\nVocê está pronto para fazer sua primeira venda!\n\nClique em Concluir para voltar ao Push Academy e iniciar o Módulo 2.',
+        celebration: true,
       },
     ],
   },
@@ -91,20 +65,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Realize sua primeira venda completa no PDV.',
     icon: '🛒',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '2.1',
-        title: 'Vendendo no PDV',
-        steps: [
-          { instruction: 'Vamos fazer sua primeira venda!', route: '/pdv' },
-          { instruction: 'No campo "Buscar produto", digite o nome do produto que cadastrou.' },
-          { instruction: 'Clique no produto para adicioná-lo ao carrinho.' },
-          { instruction: 'No campo "Cliente", busque e selecione o cliente (ou deixe em branco).' },
-          { instruction: 'Clique em "Pagamento" para escolher a forma de pagamento.' },
-          { instruction: 'Selecione a forma (Dinheiro, PIX, Cartão...) e confirme.' },
-          { instruction: 'Clique em "Finalizar Venda".' },
-          { instruction: '🎉 Parabéns! Sua primeira venda foi registrada!' },
-        ],
+        title: 'Vamos fazer sua primeira venda!',
+        body: 'O PDV é onde as vendas acontecem.\n\n1. No campo "Buscar produto", digite o nome do produto que cadastrou\n2. Clique no produto para adicioná-lo ao carrinho\n3. No campo "Cliente", busque e selecione o cliente (ou deixe em branco)\n4. Clique em "Pagamento"\n5. Selecione a forma (Dinheiro, PIX, Cartão...)\n6. Clique em "Finalizar Venda"',
+        route: '/pdv',
+      },
+      {
+        title: '🎉 Primeira venda realizada!',
+        body: 'Parabéns! Sua venda foi registrada com sucesso.\n\nO estoque foi atualizado automaticamente, o financeiro registrou a entrada e o caixa foi creditado.\n\nVocê já pode operar sua loja no dia a dia.',
+        celebration: true,
       },
     ],
   },
@@ -114,17 +84,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Consulte, pesquise e gerencie suas vendas.',
     icon: '📋',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '3.1',
-        title: 'Consultando vendas',
-        steps: [
-          { instruction: 'Aqui ficam todas as vendas realizadas.', route: '/vendas' },
-          { instruction: 'Use os filtros para encontrar vendas por status, período ou vendedor.' },
-          { instruction: 'Clique em uma venda para ver os detalhes.' },
-          { instruction: 'Você pode imprimir o comprovante ou cancelar a venda se necessário.' },
-          { instruction: '✅ Agora você sabe consultar e gerenciar suas vendas!' },
-        ],
+        title: 'Consulte suas vendas',
+        body: 'Aqui ficam todas as vendas realizadas.\n\n• Use os filtros para encontrar vendas por status, período ou vendedor\n• Clique em uma venda para ver os detalhes completos\n• Você pode imprimir o comprovante novamente\n• Pode cancelar uma venda se necessário\n\nTodas as informações de cada venda ficam registradas aqui.',
+        route: '/vendas',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe consultar e gerenciar suas vendas.',
+        celebration: true,
       },
     ],
   },
@@ -134,17 +103,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Edite, pesquise e acompanhe seus clientes.',
     icon: '👥',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '4.1',
-        title: 'Gestão de clientes',
-        steps: [
-          { instruction: 'Aqui você gerencia todos os seus clientes.', route: '/clientes' },
-          { instruction: 'Use a busca para encontrar clientes pelo nome ou telefone.' },
-          { instruction: 'Clique em um cliente para ver o histórico de compras.' },
-          { instruction: 'Você pode editar dados, adicionar etiquetas (VIP, inadimplente, etc).' },
-          { instruction: '✅ Agora você sabe gerenciar sua base de clientes!' },
-        ],
+        title: 'Gerencie sua base de clientes',
+        body: 'Aqui você gerencia todos os seus clientes.\n\n• Use a busca para encontrar por nome ou telefone\n• Clique em um cliente para ver o histórico de compras\n• Edite dados, adicione etiquetas (VIP, inadimplente, etc)\n• Filtre por tipo: Varejo, Atacado, Lojista, Revendedor\n\nClientes bem organizados facilitam vendas futuras e crediário.',
+        route: '/clientes',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe gerenciar sua base de clientes.',
+        celebration: true,
       },
     ],
   },
@@ -154,18 +122,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Controle entradas, saídas e ajustes de estoque.',
     icon: '📦',
     estimatedTime: '8 min',
-    submodules: [
+    steps: [
       {
-        id: '5.1',
-        title: 'Gestão de estoque',
-        steps: [
-          { instruction: 'O estoque mostra a situação de todos os seus produtos.', route: '/estoque' },
-          { instruction: 'Na aba "Executivo" você vê o valor total, alertas e curva ABC.' },
-          { instruction: 'Na aba "Operação" você faz ajustes manuais de quantidade.' },
-          { instruction: 'Na aba "Movimentações" você vê todas as entradas e saídas.' },
-          { instruction: 'Na aba "Entradas" você registra recebimento de mercadorias.' },
-          { instruction: '✅ Agora você sabe controlar seu estoque!' },
-        ],
+        title: 'Controle seu estoque',
+        body: 'O estoque mostra a situação de todos os seus produtos.\n\n• Aba "Executivo": valor total, alertas e curva ABC\n• Aba "Operação": ajustes manuais de quantidade\n• Aba "Movimentações": todas as entradas e saídas\n• Aba "Entradas": registre recebimento de mercadorias\n\nO estoque atualiza automaticamente a cada venda.',
+        route: '/estoque',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe controlar seu estoque.',
+        celebration: true,
       },
     ],
   },
@@ -175,18 +141,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Controle receitas e despesas da sua empresa.',
     icon: '💰',
     estimatedTime: '8 min',
-    submodules: [
+    steps: [
       {
-        id: '6.1',
-        title: 'Recebimentos e pagamentos',
-        steps: [
-          { instruction: 'Aqui você controla tudo que entra e sai de dinheiro.', route: '/financeiro' },
-          { instruction: 'Clique em "Nova Saída" para registrar uma despesa.' },
-          { instruction: 'Preencha: descrição, valor, data e categoria.' },
-          { instruction: 'Clique em Salvar.' },
-          { instruction: 'As entradas de vendas aparecem automaticamente.' },
-          { instruction: '✅ Agora você sabe registrar suas despesas!' },
-        ],
+        title: 'Controle financeiro',
+        body: 'Aqui você controla tudo que entra e sai de dinheiro.\n\nPara registrar uma despesa:\n1. Clique em "Nova Saída"\n2. Preencha: descrição, valor, data e categoria\n3. Clique em Salvar\n\nAs entradas de vendas aparecem automaticamente. Você só precisa registrar despesas (aluguel, fornecedores, salários, etc).',
+        route: '/financeiro',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe registrar e controlar suas finanças.',
+        celebration: true,
       },
     ],
   },
@@ -196,18 +160,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Abra, feche e gerencie seus caixas.',
     icon: '🏦',
     estimatedTime: '8 min',
-    submodules: [
+    steps: [
       {
-        id: '7.1',
-        title: 'Gestão de caixas',
-        steps: [
-          { instruction: 'Caixas são onde o dinheiro fica. Todo pagamento vai para um caixa.', route: '/caixas' },
-          { instruction: 'Na "Visão Geral" você vê o saldo de cada caixa.' },
-          { instruction: 'Clique em "Abrir Caixa" para iniciar o dia. Informe o saldo inicial.' },
-          { instruction: 'No "Histórico" você vê todas as movimentações.' },
-          { instruction: 'No "Fechamento" você confere e fecha o caixa no fim do dia.' },
-          { instruction: '✅ Agora você sabe gerenciar seus caixas!' },
-        ],
+        title: 'Gerencie seus caixas',
+        body: 'Caixas são onde o dinheiro fica. Todo pagamento vai para um caixa.\n\n• "Visão Geral": saldo de cada caixa\n• "Abrir Caixa": inicie o dia informando o saldo inicial\n• "Histórico": todas as movimentações\n• "Fechamento": confira e feche o caixa no fim do dia\n\nAbra o caixa todo dia antes de vender. Feche no final do expediente.',
+        route: '/caixas',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe gerenciar seus caixas.',
+        celebration: true,
       },
     ],
   },
@@ -217,17 +179,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Configure dinheiro, PIX, cartão e crediário.',
     icon: '💳',
     estimatedTime: '3 min',
-    submodules: [
+    steps: [
       {
-        id: '8.1',
-        title: 'Configurando pagamentos',
-        steps: [
-          { instruction: 'Aqui você configura como seus clientes podem pagar.', route: '/formas-pagamento' },
-          { instruction: 'O sistema já vem com: Dinheiro, PIX, Cartão de Crédito, Cartão de Débito e Boleto.' },
-          { instruction: 'Você pode editar taxas e prazos de cada forma.' },
-          { instruction: 'Cada forma de pagamento direciona o valor para um caixa destino.' },
-          { instruction: '✅ Suas formas de pagamento estão configuradas!' },
-        ],
+        title: 'Configure seus pagamentos',
+        body: 'Aqui você configura como seus clientes podem pagar.\n\nO sistema já vem com: Dinheiro, PIX, Cartão de Crédito, Cartão de Débito e Boleto.\n\nVocê pode:\n• Editar taxas e prazos de cada forma\n• Definir o caixa destino de cada forma\n• Criar novas formas personalizadas\n• Desativar formas que não usa',
+        route: '/formas-pagamento',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Suas formas de pagamento estão configuradas.',
+        celebration: true,
       },
     ],
   },
@@ -237,18 +198,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Venda fiado com controle de parcelas.',
     icon: '📝',
     estimatedTime: '8 min',
-    submodules: [
+    steps: [
       {
-        id: '9.1',
-        title: 'Usando o crediário',
-        steps: [
-          { instruction: 'O crediário permite vender a prazo com parcelas controladas.', route: '/crediario' },
-          { instruction: 'No "Painel" você vê: total a receber, vencidos e inadimplência.' },
-          { instruction: 'Em "Créditos" você vê o limite de cada cliente.' },
-          { instruction: 'Em "Parcelas" você vê todas as parcelas pendentes e vencidas.' },
-          { instruction: 'Para receber, clique na parcela e registre o pagamento.' },
-          { instruction: '✅ Agora você sabe usar o crediário!' },
-        ],
+        title: 'Use o crediário',
+        body: 'O crediário permite vender a prazo com parcelas controladas.\n\n• "Painel": total a receber, vencidos e inadimplência\n• "Créditos": limite de cada cliente\n• "Parcelas": todas as parcelas pendentes e vencidas\n• "Renegociações": renegociar dívidas\n\nPara receber uma parcela, clique nela e registre o pagamento.',
+        route: '/crediario',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe usar o crediário.',
+        celebration: true,
       },
     ],
   },
@@ -258,17 +217,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Veja a projeção financeira da sua empresa.',
     icon: '📈',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '10.1',
         title: 'Previsão de caixa',
-        steps: [
-          { instruction: 'O Fluxo de Caixa mostra quanto dinheiro você terá no futuro.', route: '/fluxo-caixa' },
-          { instruction: 'Veja o saldo projetado para 7, 30, 60 ou 90 dias.' },
-          { instruction: 'O gráfico mostra a tendência — se vai sobrar ou faltar dinheiro.' },
-          { instruction: 'Use essa informação para planejar compras e pagamentos.' },
-          { instruction: '✅ Agora você sabe interpretar seu fluxo de caixa!' },
-        ],
+        body: 'O Fluxo de Caixa mostra quanto dinheiro você terá no futuro.\n\n• Veja o saldo projetado para 7, 30, 60 ou 90 dias\n• O gráfico mostra a tendência (vai sobrar ou faltar dinheiro?)\n• "Próximos Recebimentos": o que vai entrar\n• "Próximos Pagamentos": o que vai sair\n\nUse essa informação para planejar compras e pagamentos.',
+        route: '/fluxo-caixa',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe interpretar seu fluxo de caixa.',
+        celebration: true,
       },
     ],
   },
@@ -278,17 +236,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Organize categorias financeiras.',
     icon: '🗂️',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '11.1',
         title: 'Categorias financeiras',
-        steps: [
-          { instruction: 'O Plano de Contas organiza suas receitas e despesas por categoria.', route: '/plano-contas' },
-          { instruction: 'Receitas, Custos, Despesas, Impostos — tudo separado.' },
-          { instruction: 'Isso permite gerar o DRE (resultado) da sua empresa.' },
-          { instruction: 'O sistema já vem com um plano padrão. Você pode personalizar.' },
-          { instruction: '✅ Agora você entende o plano de contas!' },
-        ],
+        body: 'O Plano de Contas organiza suas receitas e despesas por categoria.\n\n• Receitas: tudo que entra (vendas, serviços)\n• Custos/CMV: custo do que vendeu\n• Despesas: aluguel, salários, marketing\n• Impostos: tributos\n\nIsso permite gerar o DRE (resultado). O sistema já vem com um plano padrão que você pode personalizar.',
+        route: '/plano-contas',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você entende o plano de contas.',
+        celebration: true,
       },
     ],
   },
@@ -298,19 +255,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Entenda o lucro real da sua empresa.',
     icon: '📊',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '12.1',
-        title: 'Demonstrativo de resultado',
-        steps: [
-          { instruction: 'O DRE mostra se sua empresa está dando lucro ou prejuízo.', route: '/dre' },
-          { instruction: 'Faturamento Bruto: tudo que você vendeu.' },
-          { instruction: 'CMV (Custo da Mercadoria): quanto custou o que vendeu.' },
-          { instruction: 'Lucro Bruto: faturamento menos custo.' },
-          { instruction: 'Despesas Operacionais: aluguel, salários, etc.' },
-          { instruction: 'Lucro Líquido: o que sobra no final.' },
-          { instruction: '✅ Agora você sabe ler o resultado da sua empresa!' },
-        ],
+        title: 'Demonstrativo de Resultado',
+        body: 'O DRE mostra se sua empresa está dando lucro ou prejuízo.\n\n• (+) Faturamento Bruto: tudo que vendeu\n• (-) CMV: quanto custou o que vendeu\n• (=) Lucro Bruto\n• (-) Despesas Operacionais: aluguel, salários, etc\n• (=) Lucro Líquido: o que sobra no final\n\nAcompanhe por período: hoje, 7 dias, 30 dias, trimestre ou ano.',
+        route: '/dre',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe ler o resultado da sua empresa.',
+        celebration: true,
       },
     ],
   },
@@ -320,17 +274,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Indicadores e decisões estratégicas.',
     icon: '🎯',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '13.1',
         title: 'Painel executivo',
-        steps: [
-          { instruction: 'A Visão Executiva reúne os indicadores mais importantes.', route: '/executivo' },
-          { instruction: 'Faturamento, Lucro, Margem, Ticket Médio, Caixa.' },
-          { instruction: 'Use os filtros de período: Hoje, Semana, Mês, Trimestre, Ano.' },
-          { instruction: 'Abaixo você vê: Top Produtos, Ranking de Vendedores, Horários de Pico.' },
-          { instruction: '✅ Agora você sabe usar a Visão Executiva para tomar decisões!' },
-        ],
+        body: 'A Visão Executiva reúne os indicadores mais importantes.\n\n• Faturamento, Lucro, Margem, Ticket Médio\n• Caixa Disponível, A Receber\n• Top Produtos, Ranking de Vendedores\n• Horários de Pico, Formas de Pagamento\n\nUse os filtros de período: Hoje, Semana, Mês, Trimestre, Ano.\n\nFoco: transformar indicadores em decisões.',
+        route: '/executivo',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe usar a Visão Executiva para tomar decisões.',
+        celebration: true,
       },
     ],
   },
@@ -340,17 +293,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Gere relatórios detalhados da operação.',
     icon: '📑',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '14.1',
         title: 'Relatórios operacionais',
-        steps: [
-          { instruction: 'Os Relatórios detalham sua operação em diferentes ângulos.', route: '/relatorios' },
-          { instruction: 'Vendas por período, por vendedor, por produto.' },
-          { instruction: 'Estoque parado, produtos inativos, melhores clientes.' },
-          { instruction: 'Use os filtros de período e as abas para navegar.' },
-          { instruction: '✅ Agora você sabe gerar e interpretar relatórios!' },
-        ],
+        body: 'Os Relatórios detalham sua operação em diferentes ângulos.\n\n• Vendas por período, por vendedor, por produto\n• Tabelas de preço\n• Estoque: produtos parados, inativos\n• Top Produtos, Top Clientes\n\nUse os filtros de período e as abas para navegar entre os relatórios.',
+        route: '/relatorios',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe gerar e interpretar relatórios.',
+        celebration: true,
       },
     ],
   },
@@ -360,17 +312,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Entenda e melhore a saúde do seu negócio.',
     icon: '❤️',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '15.1',
         title: 'Push Score',
-        steps: [
-          { instruction: 'O Push Score mede a saúde geral da sua loja.', route: '/push-score' },
-          { instruction: 'Ele analisa: vendas, margem, estoque, clientes e financeiro.' },
-          { instruction: 'Quanto maior o score, mais saudável está sua empresa.' },
-          { instruction: 'O sistema dá dicas de como melhorar cada indicador.' },
-          { instruction: '✅ Agora você entende seu Push Score!' },
-        ],
+        body: 'O Push Score mede a saúde geral da sua loja.\n\nEle analisa:\n• Vendas e faturamento\n• Margem de lucro\n• Giro de estoque\n• Relacionamento com clientes\n• Saúde financeira\n\nQuanto maior o score, mais saudável está sua empresa. O sistema dá dicas de como melhorar cada indicador.',
+        route: '/push-score',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você entende seu Push Score.',
+        celebration: true,
       },
     ],
   },
@@ -380,17 +331,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Use inteligência artificial para gerenciar melhor.',
     icon: '🤖',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '16.1',
         title: 'Seu gerente inteligente',
-        steps: [
-          { instruction: 'A IA Gerente analisa sua empresa e dá recomendações.', route: '/ia-gerente' },
-          { instruction: 'No "Resumo" ela mostra o diagnóstico geral.' },
-          { instruction: 'No "Chat" você pode conversar e pedir análises específicas.' },
-          { instruction: 'Ela identifica problemas, oportunidades e prioridades.' },
-          { instruction: '✅ Agora você sabe usar a IA Gerente como aliada!' },
-        ],
+        body: 'A IA Gerente analisa sua empresa e dá recomendações.\n\n• "Resumo": diagnóstico geral da loja\n• "Chat": converse e peça análises específicas\n• Identifica problemas e oportunidades\n• Prioriza ações por impacto\n\nUse a IA como aliada para tomar decisões melhores e mais rápidas.',
+        route: '/ia-gerente',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe usar a IA Gerente.',
+        celebration: true,
       },
     ],
   },
@@ -400,16 +350,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Análises automáticas com IA.',
     icon: '🧠',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '17.1',
         title: 'Análises com IA',
-        steps: [
-          { instruction: 'Relatórios Inteligentes são gerados automaticamente pela IA.', route: '/relatorios-inteligentes' },
-          { instruction: 'Análise financeira, indicadores, CMV, despesas.' },
-          { instruction: 'A IA identifica oportunidades e classificações automáticas.' },
-          { instruction: '✅ Agora você conhece os Relatórios Inteligentes!' },
-        ],
+        body: 'Relatórios Inteligentes são gerados automaticamente pela IA.\n\n• Análise financeira detalhada\n• Indicadores de performance\n• CMV e margens por produto\n• Classificação automática de despesas\n• Oportunidades identificadas\n\nDiferente dos relatórios tradicionais, aqui a IA interpreta os dados por você.',
+        route: '/relatorios-inteligentes',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você conhece os Relatórios Inteligentes.',
+        celebration: true,
       },
     ],
   },
@@ -419,17 +369,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Crie usuários e defina permissões.',
     icon: '👤',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '18.1',
         title: 'Gestão de usuários',
-        steps: [
-          { instruction: 'Aqui você cria contas para sua equipe.', route: '/usuarios' },
-          { instruction: 'Clique em "Novo Usuário".' },
-          { instruction: 'Defina: nome, email, senha e perfil (Administrador, Gerente ou Vendedor).' },
-          { instruction: 'Cada perfil tem permissões diferentes no sistema.' },
-          { instruction: '✅ Agora você sabe gerenciar usuários!' },
-        ],
+        body: 'Aqui você cria contas para sua equipe.\n\n1. Clique em "Novo Usuário"\n2. Defina: nome, email, senha\n3. Escolha o perfil:\n   • Administrador: acesso total\n   • Gerente: acesso operacional + financeiro\n   • Vendedor: apenas PDV e meu painel\n\nCada perfil tem permissões diferentes no sistema.',
+        route: '/usuarios',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe gerenciar usuários.',
+        celebration: true,
       },
     ],
   },
@@ -439,17 +388,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Cadastre vendedores e gerencie comissões.',
     icon: '🏷️',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '19.1',
         title: 'Gestão de vendedores',
-        steps: [
-          { instruction: 'Vendedores são vinculados às vendas para controle de comissão.', route: '/vendedores' },
-          { instruction: 'Clique em "Novo Vendedor".' },
-          { instruction: 'Preencha nome, telefone e percentual de comissão.' },
-          { instruction: 'No PDV, o vendedor poderá ser selecionado em cada venda.' },
-          { instruction: '✅ Agora você sabe cadastrar vendedores!' },
-        ],
+        body: 'Vendedores são vinculados às vendas para controle de comissão.\n\n1. Clique em "Novo Vendedor"\n2. Preencha nome e telefone\n3. Defina o percentual de comissão\n\nNo PDV, o vendedor poderá ser selecionado em cada venda. O sistema calcula a comissão automaticamente.',
+        route: '/vendedores',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe cadastrar vendedores e controlar comissões.',
+        celebration: true,
       },
     ],
   },
@@ -459,18 +407,16 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     description: 'Importe produtos, clientes e estoque via planilha.',
     icon: '📥',
     estimatedTime: '5 min',
-    submodules: [
+    steps: [
       {
-        id: '20.1',
-        title: 'Importando dados',
-        steps: [
-          { instruction: 'Se você já tem dados em planilhas, pode importar tudo de uma vez.', route: '/importacao' },
-          { instruction: 'Escolha o que importar: Clientes, Produtos ou Estoque.' },
-          { instruction: 'Baixe o modelo de planilha.' },
-          { instruction: 'Preencha e faça upload.' },
-          { instruction: 'O sistema valida e importa automaticamente.' },
-          { instruction: '✅ Agora você sabe importar dados em massa!' },
-        ],
+        title: 'Importe seus dados',
+        body: 'Se você já tem dados em planilhas, pode importar tudo de uma vez.\n\n1. Escolha o que importar: Clientes, Produtos ou Estoque\n2. Baixe o modelo de planilha\n3. Preencha com seus dados\n4. Faça upload do arquivo\n5. O sistema valida e importa automaticamente\n\nIdeal para quem está migrando de outro sistema ou tem muitos itens para cadastrar.',
+        route: '/importacao',
+      },
+      {
+        title: '✅ Módulo concluído!',
+        body: 'Agora você sabe importar dados em massa. Parabéns por completar todos os módulos do Push Academy! 🎓',
+        celebration: true,
       },
     ],
   },
@@ -483,5 +429,5 @@ export function getModuleById(id: string): AcademyModule | undefined {
 export function getTotalStepsForModule(moduleId: string): number {
   const mod = getModuleById(moduleId);
   if (!mod) return 0;
-  return mod.submodules.reduce((acc, sub) => acc + sub.steps.length, 0);
+  return mod.steps.length;
 }

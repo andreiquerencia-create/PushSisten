@@ -3,44 +3,46 @@
 import { useAcademy } from './academy-context';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronLeft, X, GraduationCap, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, X, GraduationCap, CheckCircle2, Sparkles } from 'lucide-react';
 
 /**
  * Painel lateral fixo do Push Academy.
- * Renderizado no layout principal — aparece em qualquer rota quando o Academy está ativo.
+ * Mostra cabeçalho destacado + texto completo da instrução.
+ * Um "Próximo" = uma tela/tarefa inteira.
  */
 export function AcademyPanel() {
-  const { state, nextStep, prevStep, exitAcademy, getCurrentInstruction } = useAcademy();
+  const { state, nextStep, prevStep, exitAcademy } = useAcademy();
   const router = useRouter();
 
   if (!state.isActive || !state.module) return null;
 
-  const currentInstruction = getCurrentInstruction();
-  if (!currentInstruction) return null;
+  const currentStepData = state.module.steps[state.currentStep];
+  if (!currentStepData) return null;
 
   const progressPercent = state.totalSteps > 0 ? Math.round(((state.currentStep + 1) / state.totalSteps) * 100) : 0;
   const isLastStep = state.currentStep >= state.totalSteps - 1;
   const isFirstStep = state.currentStep === 0;
-  const isCelebration = currentInstruction.instruction.startsWith('✅') || currentInstruction.instruction.startsWith('🎉');
+  const isCelebration = currentStepData.celebration;
 
   const handleNext = () => {
-    // Se o próximo step tem rota, navegar primeiro
-    const allSteps = state.module!.submodules.flatMap(sub => sub.steps.map(step => ({ ...step, submoduleTitle: sub.title })));
-    const nextStepData = allSteps[state.currentStep + 1];
+    if (isLastStep) {
+      nextStep(); // marca como concluído
+      router.push('/push-academy');
+      return;
+    }
 
+    // Avançar e navegar para próxima rota
+    const nextStepData = state.module!.steps[state.currentStep + 1];
     nextStep();
 
-    if (isLastStep) {
-      router.push('/push-academy');
-    } else if (nextStepData?.route) {
+    if (nextStepData?.route) {
       router.push(nextStepData.route);
     }
   };
 
   const handlePrev = () => {
-    const allSteps = state.module!.submodules.flatMap(sub => sub.steps.map(step => ({ ...step, submoduleTitle: sub.title })));
-    const prevStepData = allSteps[state.currentStep - 1];
-
+    if (isFirstStep) return;
+    const prevStepData = state.module!.steps[state.currentStep - 1];
     prevStep();
 
     if (prevStepData?.route) {
@@ -51,6 +53,16 @@ export function AcademyPanel() {
   const handleExit = () => {
     exitAcademy();
     router.push('/push-academy');
+  };
+
+  // Formatar texto com quebras de linha
+  const formatBody = (text: string) => {
+    return text.split('\\n').map((line, i) => (
+      <span key={i}>
+        {line}
+        {i < text.split('\\n').length - 1 && <br />}
+      </span>
+    ));
   };
 
   return (
@@ -70,18 +82,13 @@ export function AcademyPanel() {
         </button>
       </div>
 
-      {/* Module info */}
-      <div className="px-4 pt-4 pb-2">
-        <div className="flex items-center gap-2 mb-1">
+      {/* Module + progress */}
+      <div className="px-4 pt-3 pb-2">
+        <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">{state.module.icon}</span>
-          <h3 className="text-sm font-semibold text-foreground">{state.module.title}</h3>
+          <span className="text-xs text-muted-foreground font-medium">{state.module.title}</span>
         </div>
-        <p className="text-[11px] text-muted-foreground">{currentInstruction.submoduleTitle}</p>
-      </div>
-
-      {/* Progress bar */}
-      <div className="px-4 pb-3">
-        <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center justify-between mb-1">
           <span className="text-[10px] text-muted-foreground">
             Passo {state.currentStep + 1} de {state.totalSteps}
           </span>
@@ -95,22 +102,31 @@ export function AcademyPanel() {
         </div>
       </div>
 
-      {/* Instruction */}
-      <div className="flex-1 px-4 py-4 overflow-y-auto">
-        <div className={`rounded-xl p-4 ${
+      {/* Step content: título destacado + corpo */}
+      <div className="flex-1 px-4 py-3 overflow-y-auto">
+        {/* Título destacado */}
+        <div className={`rounded-lg px-3 py-2 mb-3 ${
           isCelebration
             ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
-            : 'bg-muted/50 border border-border'
+            : 'bg-primary/5 border border-primary/20'
         }`}>
-          {isCelebration && (
-            <div className="flex items-center gap-2 mb-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span className="text-xs font-semibold text-emerald-600">Concluído!</span>
-            </div>
-          )}
-          <p className="text-sm text-foreground leading-relaxed">
-            {currentInstruction.instruction}
-          </p>
+          <div className="flex items-center gap-2">
+            {isCelebration ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            ) : (
+              <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
+            )}
+            <h4 className={`text-sm font-semibold ${
+              isCelebration ? 'text-emerald-700 dark:text-emerald-400' : 'text-primary'
+            }`}>
+              {currentStepData.title}
+            </h4>
+          </div>
+        </div>
+
+        {/* Corpo do texto */}
+        <div className="text-sm text-foreground/80 leading-relaxed space-y-1">
+          {formatBody(currentStepData.body)}
         </div>
       </div>
 
@@ -134,7 +150,7 @@ export function AcademyPanel() {
               isLastStep ? 'bg-emerald-600 hover:bg-emerald-700' : ''
             }`}
           >
-            {isLastStep ? 'Concluir' : 'Próximo'}
+            {isLastStep ? 'Concluir 🎉' : 'Próximo'}
             <ChevronRight className="w-3.5 h-3.5 ml-1" />
           </Button>
         </div>

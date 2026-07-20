@@ -17,8 +17,6 @@ interface AcademyContextType {
   nextStep: () => void;
   prevStep: () => void;
   exitAcademy: () => void;
-  getCurrentInstruction: () => { instruction: string; route?: string; submoduleTitle: string } | null;
-  getNextRoute: () => string | null;
 }
 
 const AcademyContext = createContext<AcademyContextType | null>(null);
@@ -32,16 +30,6 @@ export function AcademyProvider({ children }: { children: ReactNode }) {
     module: null,
   });
 
-  const getAllSteps = useCallback((mod: AcademyModule) => {
-    const steps: { instruction: string; route?: string; submoduleTitle: string }[] = [];
-    mod.submodules.forEach(sub => {
-      sub.steps.forEach(step => {
-        steps.push({ ...step, submoduleTitle: sub.title });
-      });
-    });
-    return steps;
-  }, []);
-
   const startModule = useCallback((moduleId: string, fromStep = 0) => {
     const mod = getModuleById(moduleId);
     if (!mod) return;
@@ -54,7 +42,6 @@ export function AcademyProvider({ children }: { children: ReactNode }) {
       module: mod,
     });
 
-    // Salvar progresso
     fetch('/api/academy-progress', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -66,20 +53,16 @@ export function AcademyProvider({ children }: { children: ReactNode }) {
     setState(prev => {
       if (!prev.module) return prev;
       const next = prev.currentStep + 1;
-      const allSteps = getAllSteps(prev.module);
 
-      if (next >= allSteps.length) {
-        // Módulo concluído
+      if (next >= prev.module.steps.length) {
         fetch('/api/academy-progress', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ moduleId: prev.moduleId, currentStep: next, totalSteps: prev.totalSteps, status: 'completed' }),
         }).catch(console.error);
-
         return { ...prev, isActive: false, moduleId: null, currentStep: 0, totalSteps: 0, module: null };
       }
 
-      // Salvar progresso
       fetch('/api/academy-progress', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -88,7 +71,7 @@ export function AcademyProvider({ children }: { children: ReactNode }) {
 
       return { ...prev, currentStep: next };
     });
-  }, [getAllSteps]);
+  }, []);
 
   const prevStep = useCallback(() => {
     setState(prev => {
@@ -118,21 +101,8 @@ export function AcademyProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const getCurrentInstruction = useCallback(() => {
-    if (!state.module) return null;
-    const allSteps = getAllSteps(state.module);
-    return allSteps[state.currentStep] || null;
-  }, [state.module, state.currentStep, getAllSteps]);
-
-  const getNextRoute = useCallback(() => {
-    if (!state.module) return null;
-    const allSteps = getAllSteps(state.module);
-    const next = allSteps[state.currentStep + 1];
-    return next?.route || null;
-  }, [state.module, state.currentStep, getAllSteps]);
-
   return (
-    <AcademyContext.Provider value={{ state, startModule, nextStep, prevStep, exitAcademy, getCurrentInstruction, getNextRoute }}>
+    <AcademyContext.Provider value={{ state, startModule, nextStep, prevStep, exitAcademy }}>
       {children}
     </AcademyContext.Provider>
   );

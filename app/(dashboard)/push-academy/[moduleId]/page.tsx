@@ -8,7 +8,7 @@ import { getModuleById } from '@/lib/academy/modules';
 export default function AcademyModulePage() {
   const params = useParams();
   const router = useRouter();
-  const { state, startModule } = useAcademy();
+  const { startModule } = useAcademy();
   const moduleId = params.moduleId as string;
   const mod = getModuleById(moduleId);
   const [initialized, setInitialized] = useState(false);
@@ -16,22 +16,20 @@ export default function AcademyModulePage() {
   useEffect(() => {
     if (!mod || initialized) return;
 
-    // Carregar progresso salvo
+    // Carregar progresso salvo e ativar o módulo
     fetch('/api/academy-progress')
       .then(res => res.json())
       .then(data => {
         const p = (data.progress || []).find((item: any) => item.moduleId === moduleId);
         const fromStep = (p && p.status === 'in_progress') ? p.currentStep : 0;
 
-        // Ativar o Academy
         startModule(moduleId, fromStep);
         setInitialized(true);
 
         // Navegar para a rota do step atual
-        const allSteps = mod.submodules.flatMap(sub => sub.steps);
-        const currentStepData = allSteps[fromStep];
-        if (currentStepData?.route) {
-          router.replace(currentStepData.route);
+        const stepData = mod.steps[fromStep];
+        if (stepData?.route) {
+          router.replace(stepData.route);
         } else {
           router.replace('/hoje');
         }
@@ -40,7 +38,13 @@ export default function AcademyModulePage() {
         console.error('Erro ao carregar progresso:', err);
         startModule(moduleId, 0);
         setInitialized(true);
-        router.replace('/hoje');
+
+        const firstStep = mod.steps[0];
+        if (firstStep?.route) {
+          router.replace(firstStep.route);
+        } else {
+          router.replace('/hoje');
+        }
       });
   }, [mod, moduleId, initialized, startModule, router]);
 
@@ -52,7 +56,6 @@ export default function AcademyModulePage() {
     );
   }
 
-  // Tela de loading enquanto inicializa
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="text-center space-y-2">
