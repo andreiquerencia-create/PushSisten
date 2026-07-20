@@ -113,6 +113,7 @@ model User {
   company       Company?  @relation(fields: [companyId], references: [id])
   sales         Sale[]
   seller        Seller?
+  academyProgress AcademyProgress[]
 
   @@index([companyId])
   @@map("users")
@@ -1438,5 +1439,30 @@ model BillingAuditLog {
   @@index([event])
   @@index([createdAt])
   @@map("billing_audit_logs")
+}
+
+// ============================================================
+// PUSH ACADEMY — Plataforma de Aprendizado Interativa
+// Progresso individual por usuário em cada módulo.
+// ============================================================
+model AcademyProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  moduleId    String    // ex: "modulo-1", "modulo-2"
+  status      String    @default("not_started") // not_started | in_progress | completed
+  currentStep Int       @default(0)
+  totalSteps  Int       @default(0)
+  startedAt   DateTime?
+  completedAt DateTime?
+  lastStepAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId])
+  @@index([userId])
+  @@index([status])
+  @@map("academy_progress")
 }
 

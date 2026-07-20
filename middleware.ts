@@ -199,5 +199,6 @@ export const config = {
     '/auditoria/:path*',
     '/sem-classificacao/:path*',
     '/relatorios-inteligentes/:path*',
+    '/push-academy/:path*',
   ],
 };

@@ -39,6 +39,7 @@ import {
   Tags,
   TrendingUp,
   Sparkles,
+  GraduationCap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -59,6 +60,7 @@ const allNavGroups: NavGroup[] = [
   {
     label: 'Operação',
     items: [
+      { href: '/push-academy', label: 'Push Academy', icon: GraduationCap },
       { href: '/hoje', label: 'Hoje', icon: Sunrise, roles: ['administrador', 'socio', 'gerente'] },
       { href: '/meu-painel', label: 'Meu Painel', icon: Target, roles: ['vendedor'] },
       { href: '/pdv', label: 'PDV', icon: Monitor },
