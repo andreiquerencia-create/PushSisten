@@ -62,96 +62,82 @@ export function AcademyPanel() {
     ));
   };
 
-  // ─── MOBILE VERSION (top no PDV, bottom nas outras telas) ───
+  // ─── MOBILE VERSION ───
   const MobilePanel = () => (
-    <div className={`fixed ${isPdv ? 'top-0' : 'bottom-0'} left-0 right-0 z-[100] lg:hidden animate-in ${isPdv ? 'slide-in-from-top-4' : 'slide-in-from-bottom-4'} duration-300`}>
-      {/* Minimized bar */}
+    <div className="fixed inset-0 z-[100] lg:hidden pointer-events-none">
+      {/* Minimized: pill flutuante no canto — não conflita com nada */}
       {!mobileExpanded && (
-        <div className="bg-card border-t border-border shadow-2xl px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <GraduationCap className="w-4 h-4 text-primary flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-foreground truncate">{currentStepData.title}</p>
-                <p className="text-[10px] text-muted-foreground">Passo {state.currentStep + 1}/{state.totalSteps}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setMobileExpanded(true)} className="p-2 rounded-md hover:bg-muted">
-                <ChevronUp className="w-4 h-4" />
-              </button>
-              <button onClick={handleExit} className="p-2 rounded-md hover:bg-muted text-muted-foreground">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-          {/* Mini progress */}
-          <div className="h-1 bg-muted rounded-full mt-2 overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
-          </div>
+        <div className="pointer-events-auto absolute top-16 right-3 animate-in fade-in duration-300">
+          <button
+            onClick={() => setMobileExpanded(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-lg text-xs font-medium"
+          >
+            <GraduationCap className="w-3.5 h-3.5" />
+            <span>{state.currentStep + 1}/{state.totalSteps}</span>
+          </button>
         </div>
       )}
 
-      {/* Expanded card */}
+      {/* Expanded: modal central */}
       {mobileExpanded && (
-        <div className="bg-card border-t border-border shadow-2xl max-h-[70vh] flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold text-primary">Push Academy</span>
-              <span className="text-[10px] text-muted-foreground">• {state.module!.title}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setMobileExpanded(false)} className="p-1.5 rounded-md hover:bg-muted">
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              <button onClick={handleExit} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground">
+        <>
+          {/* Backdrop */}
+          <div className="pointer-events-auto absolute inset-0 bg-black/40" onClick={() => setMobileExpanded(false)} />
+          {/* Modal */}
+          <div className="pointer-events-auto absolute inset-x-4 top-1/2 -translate-y-1/2 bg-card rounded-2xl shadow-2xl max-h-[75vh] flex flex-col animate-in zoom-in-95 fade-in duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary">Push Academy</span>
+                <span className="text-[10px] text-muted-foreground">• {state.module!.title}</span>
+              </div>
+              <button onClick={() => setMobileExpanded(false)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground">
                 <X className="w-4 h-4" />
               </button>
             </div>
-          </div>
 
-          {/* Progress */}
-          <div className="px-4 py-2">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-muted-foreground">Passo {state.currentStep + 1} de {state.totalSteps}</span>
-              <span className="text-[10px] font-medium text-primary">{progressPercent}%</span>
-            </div>
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-              <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto px-4 py-3">
-            <div className={`rounded-lg px-3 py-2 mb-3 ${
-              isCelebration
-                ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
-                : 'bg-primary/5 border border-primary/20'
-            }`}>
-              <div className="flex items-center gap-2">
-                {isCelebration ? <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" /> : <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />}
-                <h4 className={`text-sm font-semibold ${isCelebration ? 'text-emerald-700 dark:text-emerald-400' : 'text-primary'}`}>{currentStepData.title}</h4>
+            {/* Progress */}
+            <div className="px-4 py-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-muted-foreground">Passo {state.currentStep + 1} de {state.totalSteps}</span>
+                <span className="text-[10px] font-medium text-primary">{progressPercent}%</span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
               </div>
             </div>
-            <div className="text-sm text-foreground/80 leading-relaxed space-y-1">
-              {formatBody(currentStepData.body)}
-            </div>
-          </div>
 
-          {/* Navigation */}
-          <div className="px-4 py-3 border-t border-border">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrev} disabled={isFirstStep} className="flex-1 text-xs h-9">
-                <ChevronLeft className="w-3.5 h-3.5 mr-1" />Voltar
-              </Button>
-              <Button size="sm" onClick={handleNext} className={`flex-1 text-xs h-9 ${isLastStep ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}>
-                {isLastStep ? 'Concluir 🎉' : 'Próximo'}<ChevronRight className="w-3.5 h-3.5 ml-1" />
-              </Button>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-4 py-3">
+              <div className={`rounded-lg px-3 py-2 mb-3 ${
+                isCelebration
+                  ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
+                  : 'bg-primary/5 border border-primary/20'
+              }`}>
+                <div className="flex items-center gap-2">
+                  {isCelebration ? <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" /> : <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />}
+                  <h4 className={`text-sm font-semibold ${isCelebration ? 'text-emerald-700 dark:text-emerald-400' : 'text-primary'}`}>{currentStepData.title}</h4>
+                </div>
+              </div>
+              <div className="text-sm text-foreground/80 leading-relaxed space-y-1">
+                {formatBody(currentStepData.body)}
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <div className="px-4 py-3 border-t border-border">
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => { handlePrev(); setMobileExpanded(false); }} disabled={isFirstStep} className="flex-1 text-xs h-9">
+                  <ChevronLeft className="w-3.5 h-3.5 mr-1" />Voltar
+                </Button>
+                <Button size="sm" onClick={() => { handleNext(); setMobileExpanded(false); }} className={`flex-1 text-xs h-9 ${isLastStep ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}>
+                  {isLastStep ? 'Concluir 🎉' : 'Próximo'}<ChevronRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
