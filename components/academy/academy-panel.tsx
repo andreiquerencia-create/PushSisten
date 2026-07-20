@@ -96,7 +96,7 @@ export function AcademyPanel() {
             <div className="flex items-center gap-2">
               <GraduationCap className="w-4 h-4 text-primary" />
               <span className="text-xs font-semibold text-primary">Push Academy</span>
-              <span className="text-[10px] text-muted-foreground">• {state.module.title}</span>
+              <span className="text-[10px] text-muted-foreground">• {state.module!.title}</span>
             </div>
             <div className="flex items-center gap-1">
               <button onClick={() => setMobileExpanded(false)} className="p-1.5 rounded-md hover:bg-muted">
@@ -169,8 +169,8 @@ export function AcademyPanel() {
       {/* Module + progress */}
       <div className="px-4 pt-3 pb-2">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">{state.module.icon}</span>
-          <span className="text-xs text-muted-foreground font-medium">{state.module.title}</span>
+          <span className="text-lg">{state.module!.icon}</span>
+          <span className="text-xs text-muted-foreground font-medium">{state.module!.title}</span>
         </div>
         <div className="flex items-center justify-between mb-1">
           <span className="text-[10px] text-muted-foreground">Passo {state.currentStep + 1} de {state.totalSteps}</span>
