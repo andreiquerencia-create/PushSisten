@@ -240,13 +240,28 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     estimatedTime: '8 min',
     steps: [
       {
-        title: 'Use o crediário',
-        body: '📝 O crediário permite vender a prazo com parcelas controladas.\n\n📊 "Painel": total a receber, vencidos e inadimplência\n💳 "Créditos": limite de cada cliente\n📅 "Parcelas": todas as parcelas pendentes e vencidas\n🔄 "Renegociações": renegociar dívidas\n\n💡 Para receber uma parcela, clique nela e registre o pagamento.',
+        title: 'Painel do Crediário',
+        body: '📝 O crediário permite vender a prazo com parcelas controladas.\n\n📊 No Painel você vê:\n💰 Total a Receber: quanto seus clientes devem\n⚠️ Total Vencido: parcelas que passaram do prazo\n✅ Recebido (30d): quanto entrou nos últimos 30 dias\n📉 Inadimplência: percentual de atraso\n\n👥 Maiores Devedores: ranking dos que mais devem\n📊 Distribuição por Status: Vencido, Pago, Pendente\n\n💡 Monitore diariamente para evitar inadimplência alta.',
+        route: '/crediario',
+      },
+      {
+        title: 'Créditos dos Clientes',
+        body: '💳 Na aba "Créditos" você gerencia o limite de cada cliente.\n\n📋 Para cada cliente você vê:\n💰 Limite: quanto ele pode comprar no fiado\n📊 Utilizado: quanto já usou\n✅ Disponível: quanto ainda pode comprar\n📅 Prazo: dias para pagamento\n🔴 Status: Ativo ou Bloqueado\n\n➕ Clique em "+ Novo Crédito" para liberar crediário para um cliente\n👉 Defina o limite e o prazo de pagamento\n\n💡 Bloqueie clientes inadimplentes clicando no ícone de ação.',
+        route: '/crediario',
+      },
+      {
+        title: 'Gestão de Parcelas',
+        body: '📅 Na aba "Parcelas" você controla cada parcela individualmente.\n\n📋 Informações de cada parcela:\n👤 Cliente\n🧾 Venda de origem\n🔢 Número da parcela\n💲 Valor e quanto foi pago\n📅 Vencimento\n🔴 Status: Pendente ou Vencida\n\n💰 Para receber:\n☑️ Selecione as parcelas\n👉 Clique em "Receber"\n\n⚠️ Filtre por "Vencidas" para priorizar cobranças\n🔄 Use "Renegociar" para parcelas difíceis\n\n💡 Acompanhe semanalmente para manter a inadimplência baixa.',
+        route: '/crediario',
+      },
+      {
+        title: 'Renegociações',
+        body: '🔄 Na aba "Renegociações" você reorganiza dívidas de clientes com dificuldade de pagar.\n\n📝 Como renegociar:\n👉 Vá em "Parcelas" → selecione parcelas vencidas\n🔄 Clique em "Renegociar"\n✏️ Defina novas condições (prazo, número de parcelas, desconto)\n💾 Confirme\n\n📋 O histórico mostra todas as renegociações feitas\n🔍 Busque por cliente ou referência\n\n💡 Renegociar é melhor que perder o cliente. Ofereça condições viáveis.',
         route: '/crediario',
       },
       {
         title: '✅ Módulo concluído!',
-        body: '🏆 Agora você sabe usar o crediário.',
+        body: '🏆 Agora você domina o crediário: painel, créditos, parcelas e renegociações.',
         celebration: true,
       },
     ],
