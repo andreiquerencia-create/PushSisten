@@ -63,17 +63,59 @@ export function AcademyPanel() {
   };
 
   // ─── MOBILE VERSION ───
+  // Pill arrastável + modal central
+  const [pillPos, setPillPos] = useState({ x: -1, y: -1 }); // -1 = posição padrão
+  const [dragging, setDragging] = useState(false);
+  const dragRef = useState<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
+
+  const getDefaultPillPos = () => ({
+    x: (typeof window !== 'undefined' ? window.innerWidth : 400) - 100,
+    y: (typeof window !== 'undefined' ? window.innerHeight : 800) * 0.65,
+  });
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const pos = pillPos.x === -1 ? getDefaultPillPos() : pillPos;
+    dragRef[1]({ startX: touch.clientX, startY: touch.clientY, startPosX: pos.x, startPosY: pos.y });
+    setDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!dragRef[0]) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - dragRef[0].startX;
+    const dy = touch.clientY - dragRef[0].startY;
+    setPillPos({
+      x: Math.max(0, Math.min(dragRef[0].startPosX + dx, (window?.innerWidth || 400) - 90)),
+      y: Math.max(60, Math.min(dragRef[0].startPosY + dy, (window?.innerHeight || 800) - 60)),
+    });
+  };
+
+  const handleTouchEnd = () => {
+    setDragging(false);
+    dragRef[1](null);
+  };
+
+  const pillPosition = pillPos.x === -1 ? getDefaultPillPos() : pillPos;
+
   const MobilePanel = () => (
     <div className="fixed inset-0 z-[100] lg:hidden pointer-events-none">
-      {/* Minimized: pill flutuante no canto — não conflita com nada */}
+      {/* Minimized: pill grande, arrastável, chamativa */}
       {!mobileExpanded && (
-        <div className="pointer-events-auto absolute top-16 right-3 animate-in fade-in duration-300">
+        <div
+          className="pointer-events-auto absolute animate-in fade-in duration-300"
+          style={{ left: pillPosition.x, top: pillPosition.y, transform: 'translate(-50%, -50%)' }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <button
-            onClick={() => setMobileExpanded(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-lg text-xs font-medium"
+            onClick={() => !dragging && setMobileExpanded(true)}
+            className="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-gradient-to-r from-primary to-accent text-white shadow-xl shadow-primary/30 text-sm font-semibold active:scale-95 transition-transform"
           >
-            <GraduationCap className="w-3.5 h-3.5" />
+            <GraduationCap className="w-5 h-5" />
             <span>{state.currentStep + 1}/{state.totalSteps}</span>
+            <ChevronUp className="w-4 h-4 opacity-70" />
           </button>
         </div>
       )}
