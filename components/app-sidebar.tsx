@@ -42,6 +42,7 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAcademyHighlightActive } from '@/components/academy/academy-highlight';
 
 interface NavItem {
   href: string;
@@ -122,6 +123,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const academyHighlightActive = useAcademyHighlightActive();
 
   const role = session?.user?.role ?? '';
   const isAdmin = role === 'administrador' || role === 'socio' || role === 'gerente';
@@ -142,24 +144,30 @@ export function AppSidebar() {
     signOut({ callbackUrl: '/login' });
   };
 
-  const NavLink = ({ item, isActive }: { item: NavItem; isActive: boolean }) => (
-    <Link
-      href={item.href}
-      onClick={() => setMobileOpen(false)}
-      className={cn(
-        'group relative flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200',
-        isActive
-          ? 'bg-white/[0.08] text-white'
-          : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'
-      )}
-    >
-      {isActive && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-gradient-to-b from-blue-400 to-violet-500" />
-      )}
-      <item.icon className={cn('w-4 h-4 flex-shrink-0 transition-colors', isActive ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-400')} />
-      {!collapsed && <span className="truncate">{item.label}</span>}
-    </Link>
-  );
+  const NavLink = ({ item, isActive }: { item: NavItem; isActive: boolean }) => {
+    const isAcademyItem = item.href === '/push-academy';
+    const shouldPulse = isAcademyItem && academyHighlightActive;
+
+    return (
+      <Link
+        href={item.href}
+        onClick={() => setMobileOpen(false)}
+        className={cn(
+          'group relative flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200',
+          isActive
+            ? 'bg-white/[0.08] text-white'
+            : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200',
+          shouldPulse && 'bg-primary/20 text-white ring-2 ring-primary/50 animate-pulse'
+        )}
+      >
+        {isActive && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-gradient-to-b from-blue-400 to-violet-500" />
+        )}
+        <item.icon className={cn('w-4 h-4 flex-shrink-0 transition-colors', isActive ? 'text-blue-400' : shouldPulse ? 'text-primary' : 'text-slate-500 group-hover:text-slate-400')} />
+        {!collapsed && <span className="truncate">{item.label}</span>}
+      </Link>
+    );
+  };
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">

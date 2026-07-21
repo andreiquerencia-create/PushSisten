@@ -2,6 +2,8 @@
 
 import { AppSidebar } from '@/components/app-sidebar';
 import { AcademyPanel } from '@/components/academy/academy-panel';
+import { WelcomeModal } from '@/components/academy/welcome-modal';
+import { AcademyHighlight } from '@/components/academy/academy-highlight';
 import { useAcademy } from '@/components/academy/academy-context';
 
 export default function DashboardLayout({
@@ -18,6 +20,8 @@ export default function DashboardLayout({
         {children}
       </main>
       <AcademyPanel />
+      <WelcomeModal />
+      <AcademyHighlight />
     </div>
   );
 }
