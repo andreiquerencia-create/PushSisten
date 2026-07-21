@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     const planList = plans.map(p => `- ${p.code} | ${p.name} | Tipo: ${p.type} | DRE: ${p.dreGroup || 'n/a'} | Exibe DRE: ${p.showInDre ? 'sim' : 'não'}`).join('\n');
 
-    const prompt = `Você é um assistente financeiro especializado em lojas de roupas e atacados.
+    const prompt = `Você é um assistente financeiro especializado em lojas de roupas, calçados, acessórios e varejo.
 O usuário está lançando um registro financeiro e precisa de ajuda para classificar.
 
 Plano de Contas disponível:

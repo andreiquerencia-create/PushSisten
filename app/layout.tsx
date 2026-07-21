@@ -14,8 +14,8 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-cod
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'PushSisten - Gestão Inteligente de Atacado',
-  description: 'Sistema operacional inteligente para gestão de atacado e lojas de roupas',
+  title: 'PushSisten - Gestão Inteligente para Lojas',
+  description: 'Sistema de gestão completo para lojas de roupas, calçados, acessórios e varejo',
   metadataBase: new URL(process.env.NEXTAUTH_URL ?? 'http://localhost:3000'),
   manifest: '/manifest.json',
   icons: {
@@ -29,8 +29,8 @@ export const metadata = {
     title: 'PushSisten',
   },
   openGraph: {
-    title: 'PushSisten - Gestão Inteligente de Atacado',
-    description: 'Sistema operacional inteligente para gestão de atacado e lojas de roupas',
+    title: 'PushSisten - Gestão Inteligente para Lojas',
+    description: 'Sistema de gestão completo para lojas de roupas, calçados, acessórios e varejo',
     images: ['/og-image.png'],
   },
 };

@@ -65,7 +65,7 @@ export function LoginForm() {
             </h1>
           </div>
           <p className="text-blue-200/70 text-sm">
-            Gestão inteligente de atacado e lojas de roupas
+            Gestão inteligente para lojas e comércios
           </p>
         </div>
 

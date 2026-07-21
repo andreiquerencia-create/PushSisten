@@ -789,7 +789,7 @@ export async function POST(request: NextRequest) {
       getRecentConversationContext(companyId),
     ]);
 
-    const systemPrompt = `Você é a IA Gerente do PushSisten, uma assistente inteligente estratégica especializada em gestão de atacado e lojas de roupas.
+    const systemPrompt = `Você é a IA Gerente do PushSisten, uma assistente inteligente estratégica especializada em gestão de lojas de roupas, calçados, acessórios e varejo.
 
 Você tem acesso a ferramentas para consultar dados REAIS do banco de dados da empresa. USE-AS sempre que o usuário perguntar sobre vendas, estoque, clientes, financeiro, vendedores ou tabelas de preço. Não invente dados - sempre consulte.
 

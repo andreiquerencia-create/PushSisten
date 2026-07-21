@@ -106,7 +106,7 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     steps: [
       {
         title: 'Gerencie sua base de clientes',
-        body: '👥 Aqui você gerencia todos os seus clientes.\n\n🔍 Use a busca para encontrar por nome ou telefone\n👉 Clique em um cliente para ver o histórico de compras\n🏷️ Edite dados, adicione etiquetas (VIP, inadimplente, etc)\n📂 Filtre por tipo: Varejo, Atacado, Lojista, Revendedor\n\n💡 Clientes bem organizados facilitam vendas futuras e crediário.',
+        body: '👥 Aqui você gerencia todos os seus clientes.\n\n🔍 Use a busca para encontrar por nome ou telefone\n👉 Clique em um cliente para ver o histórico de compras\n🏷️ Edite dados, adicione etiquetas (VIP, inadimplente, etc)\n📂 Filtre por tipo: Varejo, Lojista, Revendedor\n\n💡 Clientes bem organizados facilitam vendas futuras e crediário.',
         route: '/clientes',
       },
       {

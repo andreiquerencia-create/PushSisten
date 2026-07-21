@@ -120,7 +120,7 @@ export function SignupForm() {
                   <Input
                     id="companyName"
                     type="text"
-                    placeholder="Ex: Moda Fashion Atacado"
+                    placeholder="Ex: Moda Fashion, Loja da Maria..."
                     value={companyName}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompanyName(e.target.value)}
                     className="pl-10"

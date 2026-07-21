@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     const colorLines = Array.from(colorSummary.entries()).sort((a, b) => b[1].sold30 - a[1].sold30).slice(0, 15).map(([k, v]) => `${k}: ${v.sold30}un (R$${v.revenue30.toFixed(2)})`).join(', ');
     const sizeLines = Array.from(sizeSummary.entries()).sort((a, b) => b[1].sold30 - a[1].sold30).slice(0, 15).map(([k, v]) => `${k}: ${v.sold30}un (R$${v.revenue30.toFixed(2)})`).join(', ');
 
-    const systemPrompt = `Você é o Gerente de Estoque e Rentabilidade IA do PushSisten — um sistema de gestão de loja de roupas e atacado.
+    const systemPrompt = `Você é o Gerente de Estoque e Rentabilidade IA do PushSisten — um sistema de gestão para lojas de roupas, calçados, acessórios e varejo.
 
 Você é um especialista em estoque de moda, custos, margens e rentabilidade, com acesso completo aos dados reais da loja.
 

@@ -143,7 +143,7 @@ export default function BrandPage() {
                     t.name === 'Code' ? 'font-mono text-xl text-[#3B82F6]' : ''
                   }`}>
                     {t.name === 'Display' && 'Dashboard Inteligente'}
-                    {t.name === 'Body' && 'Gestão operacional para lojas de roupas e atacados com inteligência artificial integrada.'}
+                    {t.name === 'Body' && 'Gestão operacional para lojas de roupas, calçados e acessórios com inteligência artificial integrada.'}
                     {t.name === 'Code' && 'R$ 127.450,00 — SKU-00142 — 30d'}
                   </p>
                 </div>
