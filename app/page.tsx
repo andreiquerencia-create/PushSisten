@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
+import { LandingPage } from '@/components/landing/landing-page';
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -15,5 +16,7 @@ export default async function Home() {
     }
     redirect('/hoje');
   }
-  redirect('/login');
+
+  // Não logado → mostra landing page
+  return <LandingPage />;
 }
