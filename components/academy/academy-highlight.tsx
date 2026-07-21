@@ -118,15 +118,34 @@ export function useAcademyHighlightActive() {
   useEffect(() => {
     if (status !== 'authenticated' || !session?.user) return;
 
-    fetch('/api/academy-progress')
-      .then(res => res.json())
-      .then(data => {
-        const progress = data.progress || [];
-        const welcomeSeen = progress.some((p: any) => p.moduleId === '_welcome');
-        const highlightSeen = progress.some((p: any) => p.moduleId === '_highlight');
-        setActive(welcomeSeen && !highlightSeen);
-      })
-      .catch(console.error);
+    const check = () => {
+      fetch('/api/academy-progress')
+        .then(res => res.json())
+        .then(data => {
+          const progress = data.progress || [];
+          const welcomeSeen = progress.some((p: any) => p.moduleId === '_welcome');
+          const highlightSeen = progress.some((p: any) => p.moduleId === '_highlight');
+          setActive(welcomeSeen && !highlightSeen);
+        })
+        .catch(console.error);
+    };
+
+    check();
+
+    // Escutar eventos
+    const handleWelcome = () => check();
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest('a[href="/push-academy"]');
+      if (link) setActive(false);
+    };
+
+    window.addEventListener('academy-welcome-dismissed', handleWelcome);
+    document.addEventListener('click', handleClick);
+    return () => {
+      window.removeEventListener('academy-welcome-dismissed', handleWelcome);
+      document.removeEventListener('click', handleClick);
+    };
   }, [session?.user, status]);
 
   return active;
