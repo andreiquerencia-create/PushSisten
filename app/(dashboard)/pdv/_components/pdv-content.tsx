@@ -188,8 +188,9 @@ export default function PDVContent({ editSaleId }: { editSaleId?: string }) {
 
   const filteredProducts = products.filter(p => {
     const hasStock = (p.variations && p.variations.length > 0) ? p.variations.some(v => v.stockQuantity > 0) : p.stockQuantity > 0;
+    if (!search) return hasStock; // Sem busca: mostra todos com estoque
     return hasStock && (p.name.toLowerCase().includes(search.toLowerCase()) || (p.sku && p.sku.toLowerCase().includes(search.toLowerCase())));
-  }).slice(0, 24);
+  }).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 24);
 
   const filteredCustomers = useMemo(() => {
     if (!customerSearch.trim()) return customers.slice(0, 20);
@@ -824,10 +825,19 @@ export default function PDVContent({ editSaleId }: { editSaleId?: string }) {
           </div>
 
           <div className="flex-1 overflow-y-auto p-3">
-            {!barcodeMode && search ? (
+            {barcodeMode ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                <Barcode className="w-20 h-20 mb-4 opacity-20 text-amber-500" />
+                <p className="text-lg font-medium">Modo Leitor de Barras</p>
+                <p className="text-sm">Leia o código de barras do produto</p>
+              </div>
+            ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                 {filteredProducts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground col-span-full text-center py-8">Nenhum produto encontrado</p>
+                  <div className="flex flex-col items-center justify-center col-span-full py-12 text-muted-foreground">
+                    <Package className="w-12 h-12 mb-3 opacity-20" />
+                    <p className="text-sm font-medium">{search ? 'Nenhum produto encontrado' : 'Nenhum produto cadastrado'}</p>
+                  </div>
                 ) : filteredProducts.map(p => {
                   const hasVars = (p.variations?.length ?? 0) > 0;
                   return (
@@ -847,18 +857,6 @@ export default function PDVContent({ editSaleId }: { editSaleId?: string }) {
                     </Card>
                   );
                 })}
-              </div>
-            ) : !barcodeMode ? (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                <Package className="w-16 h-16 mb-4 opacity-20" />
-                <p className="text-lg font-medium">Busque um produto</p>
-                <p className="text-sm text-center">Digite o nome ou SKU do produto</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                <Barcode className="w-20 h-20 mb-4 opacity-20 text-amber-500" />
-                <p className="text-lg font-medium">Modo Leitor de Barras</p>
-                <p className="text-sm">Leia o código de barras do produto</p>
               </div>
             )}
           </div>
