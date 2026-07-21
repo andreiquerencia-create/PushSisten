@@ -20,19 +20,31 @@ export function AcademyHighlight() {
       return;
     }
 
-    fetch('/api/academy-progress')
-      .then(res => res.json())
-      .then(data => {
-        const progress = data.progress || [];
-        const welcomeSeen = progress.some((p: any) => p.moduleId === '_welcome');
-        const highlightSeen = progress.some((p: any) => p.moduleId === '_highlight');
-        // Mostra destaque se: boas-vindas já foram vistas MAS o highlight ainda não
-        if (welcomeSeen && !highlightSeen) {
-          setShow(true);
-        }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const checkShow = () => {
+      fetch('/api/academy-progress')
+        .then(res => res.json())
+        .then(data => {
+          const progress = data.progress || [];
+          const welcomeSeen = progress.some((p: any) => p.moduleId === '_welcome');
+          const highlightSeen = progress.some((p: any) => p.moduleId === '_highlight');
+          // Mostra destaque se: boas-vindas já foram vistas MAS o highlight ainda não
+          if (welcomeSeen && !highlightSeen) {
+            setShow(true);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    };
+
+    checkShow();
+
+    // Escutar quando as boas-vindas são dispensadas
+    const handleWelcomeDismissed = () => {
+      checkShow();
+    };
+
+    window.addEventListener('academy-welcome-dismissed', handleWelcomeDismissed);
+    return () => window.removeEventListener('academy-welcome-dismissed', handleWelcomeDismissed);
   }, [session?.user, status]);
 
   // Escutar clique no Push Academy para desativar o highlight

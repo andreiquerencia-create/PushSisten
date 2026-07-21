@@ -42,6 +42,8 @@ export function WelcomeModal() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ moduleId: '_welcome', currentStep: 1, totalSteps: 1, status: 'completed' }),
     }).catch(console.error);
+    // Disparar evento para ativar o highlight
+    window.dispatchEvent(new CustomEvent('academy-welcome-dismissed'));
   };
 
   if (loading || !show) return null;
